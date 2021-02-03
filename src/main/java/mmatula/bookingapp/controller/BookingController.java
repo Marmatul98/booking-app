@@ -1,7 +1,7 @@
 package mmatula.bookingapp.controller;
 
 import mmatula.bookingapp.model.Booking;
-import mmatula.bookingapp.service.IBookingService;
+import mmatula.bookingapp.service.BookingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,10 +11,10 @@ import java.util.List;
 @RequestMapping("/api")
 public class BookingController {
 
-    private final IBookingService bookingService;
+    private final BookingService bookingService;
 
     @Autowired
-    public BookingController(IBookingService bookingService) {
+    public BookingController(BookingService bookingService) {
         this.bookingService = bookingService;
     }
 

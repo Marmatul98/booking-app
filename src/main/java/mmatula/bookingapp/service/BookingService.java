@@ -1,15 +1,14 @@
-package mmatula.bookingapp.service.impl;
+package mmatula.bookingapp.service;
 
 import mmatula.bookingapp.model.Booking;
 import mmatula.bookingapp.repository.BookingRepository;
-import mmatula.bookingapp.service.IBookingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-public class BookingService implements IBookingService {
+public class BookingService {
 
     private final BookingRepository bookingRepository;
 
@@ -18,12 +17,10 @@ public class BookingService implements IBookingService {
         this.bookingRepository = bookingRepository;
     }
 
-    @Override
     public List<Booking> getAllBookings() {
         return this.bookingRepository.findAll();
     }
 
-    @Override
     public void addBooking(Booking booking) {
         this.bookingRepository.save(booking);
     }

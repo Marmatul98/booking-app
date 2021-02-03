@@ -19,6 +19,11 @@ public class FooController {
         this.fooService = fooService;
     }
 
+    @GetMapping("/testFoo")
+    public Foo getTestFoo(){
+        return new Foo(1,"testName");
+    }
+
     @GetMapping("/foo")
     public List<Foo> getAllFoo(){
         return this.fooService.getAllFoo();
