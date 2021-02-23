@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration;
 public class TwilioInitializer {
 
     private TwilioConfiguration twilioConfiguration;
-    private final static Logger logger = LoggerFactory.getLogger(TwilioInitializer.class);
+    private static final Logger logger = LoggerFactory.getLogger(TwilioInitializer.class);
 
     @Autowired
     public TwilioInitializer(TwilioConfiguration twilioConfiguration) {

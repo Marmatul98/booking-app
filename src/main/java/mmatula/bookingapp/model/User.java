@@ -5,16 +5,19 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
-@Table(name = "users")
 @Getter
 @Setter
 @NoArgsConstructor
+@Table(name = "users")
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_id")
     private Long id;
 
     private String firstName;
@@ -22,10 +25,16 @@ public class User {
     private String email;
     private String password;
 
-    public User(String firstName, String lastName, String email, String password) {
+    private boolean guest;
+
+    @OneToMany
+    private Set<Booking> bookings = new HashSet<>();
+
+    public User(String firstName, String lastName, String email, String password, boolean isGuest) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
         this.password = password;
+        this.guest = isGuest;
     }
 }

@@ -5,10 +5,9 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import javax.naming.NamingException;
 
-@ResponseStatus(value = HttpStatus.CONFLICT)
-public class UsernameAlreadyExistsException extends NamingException {
+public class EntityUniqueNameAlreadyExistsException extends NamingException {
 
-    public UsernameAlreadyExistsException() {
+    public EntityUniqueNameAlreadyExistsException() {
         super();
     }
 }

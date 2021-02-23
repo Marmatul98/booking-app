@@ -1,7 +1,7 @@
 package mmatula.bookingapp.controller;
 
 import mmatula.bookingapp.dto.UserDTO;
-import mmatula.bookingapp.exception.UsernameAlreadyExistsException;
+import mmatula.bookingapp.exception.EntityUniqueNameAlreadyExistsException;
 import mmatula.bookingapp.security.JwtUtil;
 import mmatula.bookingapp.security.dto.AuthenticationRequest;
 import mmatula.bookingapp.security.dto.AuthenticationResponse;
@@ -36,7 +36,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/register")
-    public void register(@RequestBody UserDTO userDTO) throws UsernameAlreadyExistsException {
+    public void register(@RequestBody UserDTO userDTO) throws EntityUniqueNameAlreadyExistsException {
         authenticationService.register(userDTO);
     }
 
