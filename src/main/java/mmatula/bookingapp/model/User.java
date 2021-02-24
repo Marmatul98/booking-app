@@ -37,4 +37,8 @@ public class User {
         this.password = password;
         this.guest = isGuest;
     }
+
+    public void removeBooking(Booking booking) {
+        this.bookings.remove(booking);
+    }
 }

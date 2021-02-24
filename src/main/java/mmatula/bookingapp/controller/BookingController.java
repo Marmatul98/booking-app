@@ -53,6 +53,11 @@ public class BookingController {
         return this.bookingModelMapper.entityListToDTOList(this.bookingService.getAllRequestedBookings());
     }
 
+    @GetMapping("/confirmedBookings")
+    public List<BookingDTO> getConfirmedBookings() {
+        return this.bookingModelMapper.entityListToDTOList(this.bookingService.getAllConfirmedBookings());
+    }
+
     @GetMapping("/bookings/{id}")
     public List<BookingDTO> getBookingsBySportsFieldId(@PathVariable int id) {
         try {
@@ -81,7 +86,7 @@ public class BookingController {
     public void addAdminBooking(@RequestBody BookingCreationRequest bookingCreationRequest) {
         try {
             this.bookingService.addAdminBooking(bookingCreationRequest);
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
             //todo log
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         }

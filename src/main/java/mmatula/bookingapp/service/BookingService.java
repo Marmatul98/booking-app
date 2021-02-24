@@ -173,12 +173,18 @@ public class BookingService {
 
     public void removeBookingRequest(long bookingId) {
         Booking booking = this.bookingRepository.findById(bookingId).orElseThrow();
-        long userId = booking.getUser().getId();
+        User user = booking.getUser();
+
+        user.removeBooking(booking);
+
         booking.setConfirmed(false);
         booking.setRequested(false);
         booking.setUser(null);
         this.bookingRepository.save(booking);
-        this.userRepository.deleteById(userId);
+
+        if (user.isGuest() && user.getBookings().isEmpty()){
+            this.userRepository.delete(user);
+        }else this.userRepository.save(user);
     }
 
     public void addAdminBooking(BookingCreationRequest bookingCreationRequest) {
@@ -210,5 +216,9 @@ public class BookingService {
 
     private List<LocalDate> getDatesUntilInclusive(LocalDate startDate, LocalDate endDate) {
         return startDate.datesUntil(endDate.plusDays(1)).collect(Collectors.toList());
+    }
+
+    public List<Booking> getAllConfirmedBookings() {
+        return this.bookingRepository.getBookingsByConfirmedTrueOrderByDate();
     }
 }
