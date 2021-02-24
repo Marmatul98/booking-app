@@ -4,25 +4,25 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import mmatula.bookingapp.request.EmptyBookingCreationRequest;
+import mmatula.bookingapp.request.BookingCreationRequest;
 
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
-public class EmptyBookingCreationRequestDeserializer extends StdDeserializer<EmptyBookingCreationRequest> {
+public class BookingCreationRequestDeserializer extends StdDeserializer<BookingCreationRequest> {
 
-    public EmptyBookingCreationRequestDeserializer(Class<?> vc) {
+    public BookingCreationRequestDeserializer(Class<?> vc) {
         super(vc);
     }
 
-    public EmptyBookingCreationRequestDeserializer() {
-        super(EmptyBookingCreationRequest.class);
+    public BookingCreationRequestDeserializer() {
+        super(BookingCreationRequest.class);
     }
 
     @Override
-    public EmptyBookingCreationRequest deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
+    public BookingCreationRequest deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
         JsonNode node = jsonParser.getCodec().readTree(jsonParser);
 
         LocalDate startDate = parseToLocalDate(node.get("startDate").asText());
@@ -33,7 +33,7 @@ public class EmptyBookingCreationRequestDeserializer extends StdDeserializer<Emp
         int sportsFieldId = node.get("sportsFieldId").asInt();
         int durationInMinutes = node.get("durationInMinutes").asInt();
 
-        return new EmptyBookingCreationRequest(
+        return new BookingCreationRequest(
                 sportsFieldId,
                 startDate,
                 endDate,

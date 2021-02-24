@@ -4,7 +4,7 @@ import mmatula.bookingapp.dto.BookingDTO;
 import mmatula.bookingapp.dto.UserDTO;
 import mmatula.bookingapp.dto.mapper.BookingModelMapper;
 import mmatula.bookingapp.model.Booking;
-import mmatula.bookingapp.request.EmptyBookingCreationRequest;
+import mmatula.bookingapp.request.BookingCreationRequest;
 import mmatula.bookingapp.service.BookingService;
 import mmatula.bookingapp.service.UserService;
 import org.slf4j.Logger;
@@ -48,9 +48,43 @@ public class BookingController {
         return this.bookingModelMapper.entityListToDTOList(this.bookingService.getBookingsBySportsFieldIdAndDate(sportsFieldId, LocalDate.of(year, month, day)));
     }
 
+    @GetMapping("/requestedBookings")
+    public List<BookingDTO> getRequestedBookings() {
+        return this.bookingModelMapper.entityListToDTOList(this.bookingService.getAllRequestedBookings());
+    }
+
+    @GetMapping("/bookings/{id}")
+    public List<BookingDTO> getBookingsBySportsFieldId(@PathVariable int id) {
+        try {
+            return bookingModelMapper.entityListToDTOList(bookingService.getBookingsBySportsFieldId(id));
+        } catch (NoSuchElementException e) {
+            //todo log
+            throw new NoSuchElementException();
+        }
+    }
+
     @PostMapping("/booking")
     public void addBooking(@RequestBody Booking booking) {
         this.bookingService.addOrUpdateBooking(booking);
+    }
+
+    @PostMapping("/generateBookings")
+    public void generateWeeklyBookings(@RequestBody BookingCreationRequest bookingCreationRequest) {
+        try {
+            this.bookingService.generateEmptyBookingsForDatesRange(bookingCreationRequest);
+        } catch (Exception e) {
+            //todo log
+        }
+    }
+
+    @PostMapping("/admin/booking")
+    public void addAdminBooking(@RequestBody BookingCreationRequest bookingCreationRequest) {
+        try {
+            this.bookingService.addAdminBooking(bookingCreationRequest);
+        } catch (Exception e) {
+            //todo log
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+        }
     }
 
     @PutMapping("/booking/{bookingId}/{userId}")
@@ -69,15 +103,6 @@ public class BookingController {
         this.bookingService.requestBooking(bookingId, userDTO);
     }
 
-    @PostMapping("/generateBookings")
-    public void generateWeeklyBookings(@RequestBody EmptyBookingCreationRequest emptyBookingCreationRequest) {
-        try {
-            this.bookingService.generateEmptyBookingsForDatesRange(emptyBookingCreationRequest);
-        } catch (Exception e) {
-            //todo log
-        }
-    }
-
     @PutMapping("/booking/confirm/{bookingId}")
     public void confirmBooking(@PathVariable long bookingId) {
         this.bookingService.confirmBooking(bookingId);
@@ -85,22 +110,11 @@ public class BookingController {
 
     @PutMapping("/booking/remove/{bookingId}")
     public void removeBooking(@PathVariable long bookingId) {
-        this.bookingService.removeBooking(bookingId);
+        this.bookingService.removeBookingRequest(bookingId);
     }
 
-    @GetMapping("/requestedBookings")
-    public List<BookingDTO> getRequestedBookings() {
-        return this.bookingModelMapper.entityListToDTOList(this.bookingService.getAllRequestedBookings());
-    }
-
-
-    @GetMapping("/bookings/{id}")
-    public List<BookingDTO> getBookingsBySportsFieldId(@PathVariable int id) {
-        try {
-            return bookingModelMapper.entityListToDTOList(bookingService.getBookingsBySportsFieldId(id));
-        } catch (NoSuchElementException e) {
-            //todo log
-            throw new NoSuchElementException();
-        }
+    @DeleteMapping("/booking")
+    public void deleteAllBookings() {
+        this.bookingService.deleteAllBookings();
     }
 }
