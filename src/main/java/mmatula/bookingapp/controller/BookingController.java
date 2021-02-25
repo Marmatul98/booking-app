@@ -79,6 +79,7 @@ public class BookingController {
             this.bookingService.generateEmptyBookingsForDatesRange(bookingCreationRequest);
         } catch (Exception e) {
             //todo log
+            throw e;
         }
     }
 

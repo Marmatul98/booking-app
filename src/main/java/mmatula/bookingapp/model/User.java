@@ -27,7 +27,7 @@ public class User {
 
     private boolean guest;
 
-    @OneToMany
+    @OneToMany(mappedBy = "user")
     private Set<Booking> bookings = new HashSet<>();
 
     public User(String firstName, String lastName, String email, String password, boolean isGuest) {
@@ -36,9 +36,5 @@ public class User {
         this.email = email;
         this.password = password;
         this.guest = isGuest;
-    }
-
-    public void removeBooking(Booking booking) {
-        this.bookings.remove(booking);
     }
 }

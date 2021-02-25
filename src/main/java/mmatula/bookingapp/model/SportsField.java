@@ -20,18 +20,10 @@ public class SportsField {
 
     private String name;
 
-    @OneToMany
+    @OneToMany(mappedBy = "sportsField", fetch = FetchType.EAGER)
     private Set<Booking> bookings = new HashSet<>();
 
     public SportsField(String name) {
         this.name = name;
-    }
-
-    public void addBooking(Booking booking) {
-        bookings.add(booking);
-    }
-
-    public void addBookings(Set<Booking> bookingsToAdd){
-        this.bookings.addAll(bookingsToAdd);
     }
 }

@@ -9,13 +9,15 @@ import mmatula.bookingapp.repository.BookingRepository;
 import mmatula.bookingapp.repository.SportsFieldRepository;
 import mmatula.bookingapp.repository.UserRepository;
 import mmatula.bookingapp.request.BookingCreationRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
@@ -27,14 +29,13 @@ public class BookingService {
     private final SportsFieldRepository sportsFieldRepository;
     private final UserRepository userRepository;
 
-    private final AuthenticationService authenticationService;
+    private static final Logger logger = LoggerFactory.getLogger(BookingService.class);
 
     @Autowired
-    public BookingService(BookingRepository bookingRepository, SportsFieldRepository sportsFieldRepository, UserRepository userRepository, AuthenticationService authenticationService) {
+    public BookingService(BookingRepository bookingRepository, SportsFieldRepository sportsFieldRepository, UserRepository userRepository) {
         this.bookingRepository = bookingRepository;
         this.sportsFieldRepository = sportsFieldRepository;
         this.userRepository = userRepository;
-        this.authenticationService = authenticationService;
     }
 
     public List<Booking> getAllBookings() {
@@ -46,22 +47,7 @@ public class BookingService {
     }
 
     public void deleteAllBookings() {
-        List<Booking> bookings = new ArrayList<>(this.bookingRepository.findAll());
-        bookings.forEach(this::deleteBooking);
-    }
-
-    public void deleteBooking(Booking booking) {
-        SportsField sportsField = booking.getSportsField();
-        User user = booking.getUser();
-        booking.setSportsField(null);
-        sportsField.setBookings(new HashSet<>());
-        if (user != null) {
-            user.setBookings(new HashSet<>());
-            this.userRepository.save(user);
-            booking.setUser(null);
-        }
-        this.sportsFieldRepository.save(sportsField);
-        this.bookingRepository.delete(booking);
+        this.bookingRepository.deleteAll();
     }
 
     public void addOrUpdateBooking(Booking booking) {
@@ -118,8 +104,6 @@ public class BookingService {
             }
 
             bookingRepository.saveAll(bookings);
-            sportsField.addBookings(new HashSet<>(bookings));
-            sportsFieldRepository.save(sportsField);
         } else throw new IllegalArgumentException("Sports field is not free in selected date and time");
     }
 
@@ -175,16 +159,14 @@ public class BookingService {
         Booking booking = this.bookingRepository.findById(bookingId).orElseThrow();
         User user = booking.getUser();
 
-        user.removeBooking(booking);
-
         booking.setConfirmed(false);
         booking.setRequested(false);
         booking.setUser(null);
         this.bookingRepository.save(booking);
 
-        if (user.isGuest() && user.getBookings().isEmpty()){
+        if (user.isGuest() && user.getBookings().isEmpty()) {
             this.userRepository.delete(user);
-        }else this.userRepository.save(user);
+        } else this.userRepository.save(user);
     }
 
     public void addAdminBooking(BookingCreationRequest bookingCreationRequest) {
@@ -220,5 +202,14 @@ public class BookingService {
 
     public List<Booking> getAllConfirmedBookings() {
         return this.bookingRepository.getBookingsByConfirmedTrueOrderByDate();
+    }
+
+    @Scheduled(cron = "@daily")
+    public void deleteNonRequestedBookings() {
+        this.bookingRepository.getBookingsByRequestedFalseAndDateBefore(LocalDate.now())
+                .forEach(booking -> {
+                    logger.info("Deleting booking dated " + booking.getDate().toString());
+                    this.bookingRepository.delete(booking);
+                });
     }
 }

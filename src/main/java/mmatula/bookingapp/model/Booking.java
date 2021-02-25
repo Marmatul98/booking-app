@@ -15,18 +15,18 @@ import java.time.LocalTime;
 public class Booking {
 
     @Id
-    @GeneratedValue()
+    @GeneratedValue
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     private SportsField sportsField;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     private User user;
 
-    private Boolean requested;
+    private boolean requested = false;
 
-    private Boolean confirmed;
+    private Boolean confirmed = false;
 
     private LocalTime bookedFrom;
 

@@ -15,8 +15,8 @@ public class BookingCreationParams {
     private final LocalTime endTime;
     private final Duration duration;
 
-    private final Boolean requested;
-    private final Boolean confirmed;
+    private final boolean requested;
+    private final boolean confirmed;
 
     private final User user;
 
@@ -40,11 +40,11 @@ public class BookingCreationParams {
         return duration;
     }
 
-    public Boolean getRequested() {
+    public boolean getRequested() {
         return requested;
     }
 
-    public Boolean getConfirmed() {
+    public boolean getConfirmed() {
         return confirmed;
     }
 
@@ -72,8 +72,8 @@ public class BookingCreationParams {
 
         private LocalDate date;
 
-        private Boolean requested;
-        private Boolean confirmed;
+        private boolean requested;
+        private boolean confirmed;
 
         private User user;
 
@@ -107,12 +107,12 @@ public class BookingCreationParams {
             return this;
         }
 
-        public Builder requested(Boolean requested) {
+        public Builder requested(boolean requested) {
             this.requested = requested;
             return this;
         }
 
-        public Builder confirmed(Boolean confirmed) {
+        public Builder confirmed(boolean confirmed) {
             this.confirmed = confirmed;
             return this;
         }
