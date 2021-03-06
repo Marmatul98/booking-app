@@ -1,7 +1,6 @@
 package mmatula.bookingapp.service;
 
 import mmatula.bookingapp.dto.UserDTO;
-import mmatula.bookingapp.exception.EntityUniqueNameAlreadyExistsException;
 import mmatula.bookingapp.model.User;
 import mmatula.bookingapp.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,10 +19,10 @@ public class AuthenticationService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public void register(UserDTO userDTO) throws EntityUniqueNameAlreadyExistsException {
+    public void register(UserDTO userDTO) {
 
         if (userRepository.findByEmail(userDTO.getEmail()) != null) {
-            throw new EntityUniqueNameAlreadyExistsException();
+            throw new IllegalArgumentException("This email already exists");
         }
 
         User user = new User(

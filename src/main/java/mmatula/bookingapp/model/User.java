@@ -3,6 +3,7 @@ package mmatula.bookingapp.model;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import mmatula.bookingapp.enums.ERole;
 
 import javax.persistence.*;
 import java.util.HashSet;
@@ -19,6 +20,9 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
     private Long id;
+
+    @Enumerated(EnumType.ORDINAL)
+    private ERole role;
 
     private String firstName;
     private String lastName;

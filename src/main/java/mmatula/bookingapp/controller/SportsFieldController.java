@@ -59,10 +59,15 @@ public class SportsFieldController {
     public void deleteSportsFieldById(@PathVariable int id) {
         try {
             this.sportsFieldService.deleteSportsFieldById(id);
-        }catch (Exception e){
+        } catch (Exception e) {
             //todo log
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    @GetMapping("/secret")
+    public String getSecret() {
+        return "Tajemstvi";
     }
 
 }
