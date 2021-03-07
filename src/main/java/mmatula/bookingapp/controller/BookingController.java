@@ -20,45 +20,40 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 @RestController
-@RequestMapping("/api")
 @CrossOrigin("*")
 public class BookingController {
 
     private final BookingService bookingService;
-    private final UserService userService;
     private final BookingModelMapper bookingModelMapper;
     private static final Logger logger = LoggerFactory.getLogger(BookingController.class);
-    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public BookingController(BookingService bookingService, UserService userService, BookingModelMapper bookingModelMapper, PasswordEncoder passwordEncoder) {
+    public BookingController(BookingService bookingService, BookingModelMapper bookingModelMapper) {
         this.bookingService = bookingService;
-        this.userService = userService;
         this.bookingModelMapper = bookingModelMapper;
-        this.passwordEncoder = passwordEncoder;
     }
 
-    @GetMapping("/booking")
+    @GetMapping("/api/booking")
     public List<Booking> getAllBookings() {
         return this.bookingService.getAllBookings();
     }
 
-    @GetMapping("/booking/{sportsFieldId}/{day}/{month}/{year}")
+    @GetMapping("/api/booking/{sportsFieldId}/{day}/{month}/{year}")
     public List<BookingDTO> getBookingsBySportsFieldIdAndDate(@PathVariable int sportsFieldId, @PathVariable int day, @PathVariable int month, @PathVariable int year) {
         return this.bookingModelMapper.entityListToDTOList(this.bookingService.getBookingsBySportsFieldIdAndDate(sportsFieldId, LocalDate.of(year, month, day)));
     }
 
-    @GetMapping("/requestedBookings")
+    @GetMapping("/admin/requestedBookings")
     public List<BookingDTO> getRequestedBookings() {
         return this.bookingModelMapper.entityListToDTOList(this.bookingService.getAllRequestedBookings());
     }
 
-    @GetMapping("/confirmedBookings")
+    @GetMapping("/admin/confirmedBookings")
     public List<BookingDTO> getConfirmedBookings() {
         return this.bookingModelMapper.entityListToDTOList(this.bookingService.getAllConfirmedBookings());
     }
 
-    @GetMapping("/bookings/{id}")
+    @GetMapping("/api/bookings/{id}")
     public List<BookingDTO> getBookingsBySportsFieldId(@PathVariable int id) {
         try {
             return bookingModelMapper.entityListToDTOList(bookingService.getBookingsBySportsFieldId(id));
@@ -68,12 +63,7 @@ public class BookingController {
         }
     }
 
-    @PostMapping("/booking")
-    public void addBooking(@RequestBody Booking booking) {
-        this.bookingService.addOrUpdateBooking(booking);
-    }
-
-    @PostMapping("/generateBookings")
+    @PostMapping("/admin/generateBookings")
     public void generateWeeklyBookings(@RequestBody BookingCreationRequest bookingCreationRequest) {
         try {
             this.bookingService.generateEmptyBookingsForDatesRange(bookingCreationRequest);
@@ -93,7 +83,7 @@ public class BookingController {
         }
     }
 
-    @PutMapping("/booking/{bookingId}/{userId}")
+    @PutMapping("/api/booking/{bookingId}/{userId}")
     public void addUserToBooking(@PathVariable long bookingId, @PathVariable long userId) {
         try {
             this.bookingService.addUserToBooking(bookingId, userId);
@@ -104,22 +94,22 @@ public class BookingController {
 
     }
 
-    @PutMapping("/booking/{bookingId}")
+    @PutMapping("/api/booking/{bookingId}")
     public void requestBooking(@PathVariable long bookingId, @RequestBody UserDTO userDTO) {
         this.bookingService.requestBooking(bookingId, userDTO);
     }
 
-    @PutMapping("/booking/confirm/{bookingId}")
+    @PutMapping("/admin/booking/confirm/{bookingId}")
     public void confirmBooking(@PathVariable long bookingId) {
         this.bookingService.confirmBooking(bookingId);
     }
 
-    @PutMapping("/booking/remove/{bookingId}")
+    @PutMapping("/admin/booking/remove/{bookingId}")
     public void removeBooking(@PathVariable long bookingId) {
         this.bookingService.removeBookingRequest(bookingId);
     }
 
-    @DeleteMapping("/booking")
+    @DeleteMapping("/admin/booking")
     public void deleteAllBookings() {
         this.bookingService.deleteAllBookings();
     }

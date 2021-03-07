@@ -1,6 +1,7 @@
 package mmatula.bookingapp.service;
 
 import mmatula.bookingapp.dto.UserDTO;
+import mmatula.bookingapp.enums.ERole;
 import mmatula.bookingapp.model.User;
 import mmatula.bookingapp.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,7 @@ public class AuthenticationService {
                 userDTO.getEmail(),
                 passwordEncoder.encode(userDTO.getPassword()),
                 userDTO.isGuest());
+        user.setRole(ERole.USER);
         this.userRepository.save(user);
     }
 }
