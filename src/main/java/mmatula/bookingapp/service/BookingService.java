@@ -17,9 +17,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -135,7 +135,7 @@ public class BookingService {
                     userDTO.getLastName(),
                     userDTO.getEmail(),
                     null,
-                    true
+                    ""
             );
         }
         booking.setRequested(true);
@@ -211,5 +211,33 @@ public class BookingService {
                     logger.info("Deleting booking dated " + booking.getDate().toString());
                     this.bookingRepository.delete(booking);
                 });
+    }
+
+    public List<Booking> getAllBookingsByDate(LocalDate date) {
+        return this.bookingRepository.getBookingsByDate(date);
+    }
+
+    public List<String> getAvailableBookingTimeSlots() {
+        LocalTime startTime = LocalTime.of(8, 0);
+        LocalTime endTime = LocalTime.of(22, 0);
+
+        Deque<LocalTime> timeDeque = new ArrayDeque<>();
+        timeDeque.add(startTime);
+
+        while (true) {
+            assert timeDeque.peekLast() != null;
+            if (!timeDeque.peekLast().isBefore(endTime)) break;
+            timeDeque.add(timeDeque.peekLast().plusMinutes(30));
+        }
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+
+        List<String> returnedList = new ArrayList<>();
+        List<LocalTime> dequeAsList = new ArrayList<>(timeDeque);
+        for (int i = 1; i < dequeAsList.size(); i++) {
+                returnedList.add(dequeAsList.get(i - 1).format(formatter) + "-" + dequeAsList.get(i).format(formatter));
+        }
+
+        return returnedList;
     }
 }

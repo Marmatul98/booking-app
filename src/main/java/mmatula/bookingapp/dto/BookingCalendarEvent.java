@@ -9,12 +9,11 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserDTO {
+public class BookingCalendarEvent {
 
-    private String firstName;
-    private String lastName;
-    private String email;
-    private String password;
-    private String phoneNumber;
-    private boolean isGuest;
+    public long id;
+    public int resourceId;
+    public String title;
+    public String start;
+    public String end;
 }

@@ -12,6 +12,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SportsFieldDTO {
-    private int id;
+    private String id;
     private String name;
 }

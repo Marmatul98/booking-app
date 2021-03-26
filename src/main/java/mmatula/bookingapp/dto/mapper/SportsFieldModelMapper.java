@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 public class SportsFieldModelMapper {
 
     public SportsFieldDTO entityToDto(SportsField sportsField) {
-        return new SportsFieldDTO(sportsField.getId(), sportsField.getName());
+        return new SportsFieldDTO(String.valueOf(sportsField.getId()), sportsField.getName());
     }
 
     public List<SportsFieldDTO> entityListToDtoList(List<SportsField> sportsFields) {

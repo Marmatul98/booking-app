@@ -1,21 +1,22 @@
 package mmatula.bookingapp.controller;
 
+import mmatula.bookingapp.dto.BookingCalendarEvent;
 import mmatula.bookingapp.dto.BookingDTO;
 import mmatula.bookingapp.dto.UserDTO;
+import mmatula.bookingapp.dto.mapper.BookingCalendarEventModelMapper;
 import mmatula.bookingapp.dto.mapper.BookingModelMapper;
 import mmatula.bookingapp.model.Booking;
 import mmatula.bookingapp.request.BookingCreationRequest;
 import mmatula.bookingapp.service.BookingService;
-import mmatula.bookingapp.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -25,12 +26,14 @@ public class BookingController {
 
     private final BookingService bookingService;
     private final BookingModelMapper bookingModelMapper;
+    private final BookingCalendarEventModelMapper bookingCalendarEventModelMapper;
     private static final Logger logger = LoggerFactory.getLogger(BookingController.class);
 
     @Autowired
-    public BookingController(BookingService bookingService, BookingModelMapper bookingModelMapper) {
+    public BookingController(BookingService bookingService, BookingModelMapper bookingModelMapper, BookingCalendarEventModelMapper bookingCalendarEventModelMapper) {
         this.bookingService = bookingService;
         this.bookingModelMapper = bookingModelMapper;
+        this.bookingCalendarEventModelMapper = bookingCalendarEventModelMapper;
     }
 
     @GetMapping("/api/booking")
@@ -38,9 +41,20 @@ public class BookingController {
         return this.bookingService.getAllBookings();
     }
 
+    @GetMapping("/api/bookingsByDate")
+    public List<BookingCalendarEvent> getAllBookingsByDate(@RequestParam String start) {
+        return this.bookingCalendarEventModelMapper.entityListToDTOList(
+                this.bookingService.getAllBookingsByDate(LocalDate.parse(start, DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
+    }
+
     @GetMapping("/api/booking/{sportsFieldId}/{day}/{month}/{year}")
     public List<BookingDTO> getBookingsBySportsFieldIdAndDate(@PathVariable int sportsFieldId, @PathVariable int day, @PathVariable int month, @PathVariable int year) {
         return this.bookingModelMapper.entityListToDTOList(this.bookingService.getBookingsBySportsFieldIdAndDate(sportsFieldId, LocalDate.of(year, month, day)));
+    }
+
+    @GetMapping("/api/bookingSlots")
+    public List<String> getAvailableBookingTimeSlots(){
+        return this.bookingService.getAvailableBookingTimeSlots();
     }
 
     @GetMapping("/admin/requestedBookings")

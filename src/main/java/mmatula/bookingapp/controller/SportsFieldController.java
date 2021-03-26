@@ -29,17 +29,6 @@ public class SportsFieldController {
     public List<SportsFieldDTO> getAllSportsFields() {
         return this.sportsFieldModelMapper.entityListToDtoList(this.sportsFieldService.getAllSportsFields());
     }
-//
-//    @GetMapping("/sportsField/{id}")
-//    public SportsFieldDTO getSportsFieldById(@PathVariable int id) {
-//        try {
-//            SportsField sportsField = this.sportsFieldService.getSportsFieldById(id);
-//            return this.sportsFieldModelMapper.entityToDTO(sportsField, this.bookingService.getBookingsBySportsFieldId(sportsField.getId()));
-//        } catch (NoSuchElementException e) {
-//            //todo log exception
-//            throw new NoSuchElementException();
-//        }
-//    }
 
     @PostMapping("/admin/sportsField")
     public void addSportsField(@RequestBody String name) {

@@ -33,4 +33,8 @@ public class Booking {
     private LocalTime bookedTo;
 
     private LocalDate date;
+
+    public boolean getRequested() {
+        return requested;
+    }
 }

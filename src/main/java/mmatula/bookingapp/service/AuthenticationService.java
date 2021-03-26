@@ -31,8 +31,25 @@ public class AuthenticationService {
                 userDTO.getLastName(),
                 userDTO.getEmail(),
                 passwordEncoder.encode(userDTO.getPassword()),
-                userDTO.isGuest());
+                formatPhoneNumber(userDTO.getPhoneNumber()));
         user.setRole(ERole.USER);
         this.userRepository.save(user);
+    }
+
+    private String formatPhoneNumber(String phoneNumber) {
+        if (phoneNumber.length() < 9) {
+            throw new IllegalArgumentException();
+        }
+
+        if (phoneNumber.length() == 9) {
+            if (phoneNumber.matches("^\\d{9}$")) {
+                return phoneNumber;
+            } else throw new IllegalArgumentException();
+        } else if (phoneNumber.length() == 13) {
+            if (phoneNumber.matches("")){
+                return null;
+            }
+        } else throw new IllegalArgumentException();
+        return null;
     }
 }
