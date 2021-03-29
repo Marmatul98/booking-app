@@ -44,7 +44,7 @@ public class BookingCreationRequestDeserializer extends StdDeserializer<BookingC
     }
 
     private LocalDate parseToLocalDate(String date) {
-        return LocalDate.parse(date,DateTimeFormatter.ISO_DATE_TIME);
+        return LocalDate.parse(date,DateTimeFormatter.ofPattern("d. M. yyyy"));
     }
 
     private LocalTime parseToLocalTime(String time) {
