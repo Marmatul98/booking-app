@@ -3,6 +3,7 @@ package mmatula.bookingapp.controller;
 import mmatula.bookingapp.dto.SportsFieldDTO;
 import mmatula.bookingapp.dto.mapper.SportsFieldModelMapper;
 import mmatula.bookingapp.exception.EntityUniqueNameAlreadyExistsException;
+import mmatula.bookingapp.service.ExceptionLogService;
 import mmatula.bookingapp.service.SportsFieldService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,16 +19,23 @@ public class SportsFieldController {
 
     private final SportsFieldService sportsFieldService;
     private final SportsFieldModelMapper sportsFieldModelMapper;
+    private final ExceptionLogService exceptionLogService;
 
     @Autowired
-    public SportsFieldController(SportsFieldService sportsFieldService, SportsFieldModelMapper sportsFieldModelMapper) {
+    public SportsFieldController(SportsFieldService sportsFieldService, SportsFieldModelMapper sportsFieldModelMapper, ExceptionLogService exceptionLogService) {
         this.sportsFieldService = sportsFieldService;
         this.sportsFieldModelMapper = sportsFieldModelMapper;
+        this.exceptionLogService = exceptionLogService;
     }
 
     @GetMapping("/api/sportsField")
     public List<SportsFieldDTO> getAllSportsFields() {
-        return this.sportsFieldModelMapper.entityListToDtoList(this.sportsFieldService.getAllSportsFields());
+        try {
+            return this.sportsFieldModelMapper.entityListToDtoList(this.sportsFieldService.getAllSportsFields());
+        } catch (Exception e) {
+            this.exceptionLogService.addException(e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @PostMapping("/admin/sportsField")
@@ -35,8 +43,10 @@ public class SportsFieldController {
         try {
             this.sportsFieldService.addSportsFieldByName(name);
         } catch (EntityUniqueNameAlreadyExistsException e) {
-            //todo log exception
             throw new ResponseStatusException(HttpStatus.CONFLICT);
+        } catch (Exception e) {
+            this.exceptionLogService.addException(e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -45,7 +55,7 @@ public class SportsFieldController {
         try {
             this.sportsFieldService.deleteSportsFieldById(id);
         } catch (Exception e) {
-            //todo log
+            this.exceptionLogService.addException(e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

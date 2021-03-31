@@ -8,8 +8,7 @@ import mmatula.bookingapp.dto.mapper.BookingModelMapper;
 import mmatula.bookingapp.model.Booking;
 import mmatula.bookingapp.request.BookingCreationRequest;
 import mmatula.bookingapp.service.BookingService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import mmatula.bookingapp.service.ExceptionLogService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +17,6 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 @RestController
 @CrossOrigin("*")
@@ -27,18 +25,24 @@ public class BookingController {
     private final BookingService bookingService;
     private final BookingModelMapper bookingModelMapper;
     private final BookingCalendarEventModelMapper bookingCalendarEventModelMapper;
-    private static final Logger logger = LoggerFactory.getLogger(BookingController.class);
+    private final ExceptionLogService exceptionLogService;
 
     @Autowired
-    public BookingController(BookingService bookingService, BookingModelMapper bookingModelMapper, BookingCalendarEventModelMapper bookingCalendarEventModelMapper) {
+    public BookingController(BookingService bookingService, BookingModelMapper bookingModelMapper, BookingCalendarEventModelMapper bookingCalendarEventModelMapper, ExceptionLogService exceptionLogService) {
         this.bookingService = bookingService;
         this.bookingModelMapper = bookingModelMapper;
         this.bookingCalendarEventModelMapper = bookingCalendarEventModelMapper;
+        this.exceptionLogService = exceptionLogService;
     }
 
     @GetMapping("/api/booking")
     public List<Booking> getAllBookings() {
-        return this.bookingService.getAllBookings();
+        try {
+            return this.bookingService.getAllBookings();
+        } catch (Exception e) {
+            this.exceptionLogService.addException(e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @GetMapping("/api/bookingsByDate")
@@ -49,31 +53,52 @@ public class BookingController {
 
     @GetMapping("/api/booking/{sportsFieldId}/{day}/{month}/{year}")
     public List<BookingDTO> getBookingsBySportsFieldIdAndDate(@PathVariable int sportsFieldId, @PathVariable int day, @PathVariable int month, @PathVariable int year) {
-        return this.bookingModelMapper.entityListToDTOList(this.bookingService.getBookingsBySportsFieldIdAndDate(sportsFieldId, LocalDate.of(year, month, day)));
+        try {
+            return this.bookingModelMapper.entityListToDTOList(
+                    this.bookingService.getBookingsBySportsFieldIdAndDate(sportsFieldId, LocalDate.of(year, month, day)));
+        } catch (Exception e) {
+            this.exceptionLogService.addException(e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @GetMapping("/api/bookingSlots")
-    public List<String> getAvailableBookingTimeSlots(){
-        return this.bookingService.getAvailableBookingTimeSlots();
+    public List<String> getAvailableBookingTimeSlots() {
+        try {
+            return this.bookingService.getAvailableBookingTimeSlots();
+        } catch (Exception e) {
+            this.exceptionLogService.addException(e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @GetMapping("/admin/requestedBookings")
     public List<BookingDTO> getRequestedBookings() {
-        return this.bookingModelMapper.entityListToDTOList(this.bookingService.getAllRequestedBookings());
+        try {
+            return this.bookingModelMapper.entityListToDTOList(this.bookingService.getAllRequestedBookings());
+        } catch (Exception e) {
+            this.exceptionLogService.addException(e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @GetMapping("/admin/confirmedBookings")
     public List<BookingDTO> getConfirmedBookings() {
-        return this.bookingModelMapper.entityListToDTOList(this.bookingService.getAllConfirmedBookings());
+        try {
+            return this.bookingModelMapper.entityListToDTOList(this.bookingService.getAllConfirmedBookings());
+        } catch (Exception e) {
+            this.exceptionLogService.addException(e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @GetMapping("/api/bookings/{id}")
     public List<BookingDTO> getBookingsBySportsFieldId(@PathVariable int id) {
         try {
             return bookingModelMapper.entityListToDTOList(bookingService.getBookingsBySportsFieldId(id));
-        } catch (NoSuchElementException e) {
-            //todo log
-            throw new NoSuchElementException();
+        } catch (Exception e) {
+            this.exceptionLogService.addException(e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -82,8 +107,8 @@ public class BookingController {
         try {
             this.bookingService.generateEmptyBookingsForDatesRange(bookingCreationRequest);
         } catch (Exception e) {
-            //todo log
-            throw e;
+            this.exceptionLogService.addException(e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -92,8 +117,10 @@ public class BookingController {
         try {
             this.bookingService.addAdminBooking(bookingCreationRequest);
         } catch (IllegalArgumentException e) {
-            //todo log
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+        } catch (Exception e) {
+            this.exceptionLogService.addException(e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -102,29 +129,51 @@ public class BookingController {
         try {
             this.bookingService.addUserToBooking(bookingId, userId);
         } catch (IllegalArgumentException e) {
-            //todo log
             throw new ResponseStatusException(HttpStatus.CONFLICT);
+        } catch (Exception e) {
+            this.exceptionLogService.addException(e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
     }
 
     @PutMapping("/api/booking/{bookingId}")
     public void requestBooking(@PathVariable long bookingId, @RequestBody UserDTO userDTO) {
-        this.bookingService.requestBooking(bookingId, userDTO);
+        try {
+            this.bookingService.requestBooking(bookingId, userDTO);
+        } catch (Exception e) {
+            this.exceptionLogService.addException(e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @PutMapping("/admin/booking/confirm/{bookingId}")
     public void confirmBooking(@PathVariable long bookingId) {
-        this.bookingService.confirmBooking(bookingId);
+        try {
+            this.bookingService.confirmBooking(bookingId);
+        } catch (Exception e) {
+            this.exceptionLogService.addException(e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @PutMapping("/admin/booking/remove/{bookingId}")
     public void removeBooking(@PathVariable long bookingId) {
-        this.bookingService.removeBookingRequest(bookingId);
+        try {
+            this.bookingService.removeBookingRequest(bookingId);
+        } catch (Exception e) {
+            this.exceptionLogService.addException(e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @DeleteMapping("/admin/booking")
     public void deleteAllBookings() {
-        this.bookingService.deleteAllBookings();
+        try {
+            this.bookingService.deleteAllBookings();
+        } catch (Exception e) {
+            this.exceptionLogService.addException(e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }

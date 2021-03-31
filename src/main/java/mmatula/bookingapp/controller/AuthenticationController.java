@@ -5,6 +5,7 @@ import mmatula.bookingapp.security.JwtUtil;
 import mmatula.bookingapp.security.dto.AuthenticationRequest;
 import mmatula.bookingapp.security.dto.AuthenticationResponse;
 import mmatula.bookingapp.service.AuthenticationService;
+import mmatula.bookingapp.service.ExceptionLogService;
 import mmatula.bookingapp.service.MyUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -25,13 +26,15 @@ public class AuthenticationController {
     private final MyUserDetailsService myUserDetailsService;
     private final JwtUtil jwtUtil;
     private final AuthenticationService authenticationService;
+    private final ExceptionLogService exceptionLogService;
 
     @Autowired
-    public AuthenticationController(AuthenticationManager authenticationManager, MyUserDetailsService myUserDetailsService, JwtUtil jwtUtil, AuthenticationService authenticationService) {
+    public AuthenticationController(AuthenticationManager authenticationManager, MyUserDetailsService myUserDetailsService, JwtUtil jwtUtil, AuthenticationService authenticationService, ExceptionLogService exceptionLogService) {
         this.authenticationManager = authenticationManager;
         this.myUserDetailsService = myUserDetailsService;
         this.jwtUtil = jwtUtil;
         this.authenticationService = authenticationService;
+        this.exceptionLogService = exceptionLogService;
     }
 
     @PostMapping("/register")
@@ -40,6 +43,9 @@ public class AuthenticationController {
             authenticationService.register(userDTO);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT);
+        } catch (Exception e) {
+            this.exceptionLogService.addException(e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
     }
@@ -51,6 +57,9 @@ public class AuthenticationController {
                     new UsernamePasswordAuthenticationToken(authenticationRequest.getEmail(), authenticationRequest.getPassword()));
         } catch (BadCredentialsException e) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        } catch (Exception e) {
+            this.exceptionLogService.addException(e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
         final UserDetails userDetails = myUserDetailsService.loadUserByUsername(authenticationRequest.getEmail());
