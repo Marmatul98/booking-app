@@ -1,9 +1,7 @@
 package mmatula.bookingapp.controller;
 
-import mmatula.bookingapp.dto.BookingCalendarEvent;
 import mmatula.bookingapp.dto.BookingDTO;
 import mmatula.bookingapp.dto.UserDTO;
-import mmatula.bookingapp.dto.mapper.BookingCalendarEventModelMapper;
 import mmatula.bookingapp.dto.mapper.BookingModelMapper;
 import mmatula.bookingapp.model.Booking;
 import mmatula.bookingapp.request.BookingCreationRequest;
@@ -15,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @RestController
@@ -24,14 +21,12 @@ public class BookingController {
 
     private final BookingService bookingService;
     private final BookingModelMapper bookingModelMapper;
-    private final BookingCalendarEventModelMapper bookingCalendarEventModelMapper;
     private final ExceptionLogService exceptionLogService;
 
     @Autowired
-    public BookingController(BookingService bookingService, BookingModelMapper bookingModelMapper, BookingCalendarEventModelMapper bookingCalendarEventModelMapper, ExceptionLogService exceptionLogService) {
+    public BookingController(BookingService bookingService, BookingModelMapper bookingModelMapper, ExceptionLogService exceptionLogService) {
         this.bookingService = bookingService;
         this.bookingModelMapper = bookingModelMapper;
-        this.bookingCalendarEventModelMapper = bookingCalendarEventModelMapper;
         this.exceptionLogService = exceptionLogService;
     }
 
@@ -43,12 +38,6 @@ public class BookingController {
             this.exceptionLogService.addException(e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
-    }
-
-    @GetMapping("/api/bookingsByDate")
-    public List<BookingCalendarEvent> getAllBookingsByDate(@RequestParam String start) {
-        return this.bookingCalendarEventModelMapper.entityListToDTOList(
-                this.bookingService.getAllBookingsByDate(LocalDate.parse(start, DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
     }
 
     @GetMapping("/api/booking/{sportsFieldId}/{day}/{month}/{year}")

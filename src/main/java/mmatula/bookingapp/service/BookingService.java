@@ -130,13 +130,7 @@ public class BookingService {
 
         User user = userRepository.findByEmail(userDTO.getEmail());
         if (user == null) {
-            user = new User(
-                    userDTO.getFirstName(),
-                    userDTO.getLastName(),
-                    userDTO.getEmail(),
-                    null,
-                    ""
-            );
+            throw new IllegalArgumentException("User is null");
         }
         booking.setRequested(true);
         booking.setConfirmed(false);
