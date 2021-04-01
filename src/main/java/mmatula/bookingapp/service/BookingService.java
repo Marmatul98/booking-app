@@ -42,16 +42,8 @@ public class BookingService {
         return this.bookingRepository.findAll();
     }
 
-    public Booking getBookingById(long id) {
-        return this.bookingRepository.findById(id).orElseThrow();
-    }
-
     public void deleteAllBookings() {
         this.bookingRepository.deleteAll();
-    }
-
-    public void addOrUpdateBooking(Booking booking) {
-        this.bookingRepository.save(booking);
     }
 
     public void generateEmptyBookingsForDatesRange(BookingCreationRequest bookingCreationRequest) {
@@ -229,9 +221,50 @@ public class BookingService {
         List<String> returnedList = new ArrayList<>();
         List<LocalTime> dequeAsList = new ArrayList<>(timeDeque);
         for (int i = 1; i < dequeAsList.size(); i++) {
-                returnedList.add(dequeAsList.get(i - 1).format(formatter) + "-" + dequeAsList.get(i).format(formatter));
+            returnedList.add(dequeAsList.get(i - 1).format(formatter) + "-" + dequeAsList.get(i).format(formatter));
         }
 
         return returnedList;
+    }
+
+
+    public List<Booking> getPastBookingsByUserId(long userId) {
+        return groupSameDayBookings(
+                this.bookingRepository.getBookingsByUserIdAndDateBeforeAndBookedFromBefore(userId, LocalDate.now(), LocalTime.now()));
+    }
+
+    private List<Booking> groupSameDayBookings(List<Booking> bookings) {
+        List<LocalDate> dates = bookings
+                .stream()
+                .map(Booking::getDate)
+                .collect(Collectors.toList());
+
+        List<Booking> returned = new ArrayList<>();
+
+        for (LocalDate date : dates) {
+            List<Booking> tempBookings = new ArrayList<>();
+            for (Booking booking : bookings) {
+                if (booking.getDate().equals(date)) {
+                    tempBookings.add(booking);
+                }
+            }
+            returned.addAll(groupTimesInBookings(tempBookings));
+        }
+
+        return returned;
+    }
+
+    private List<Booking> groupTimesInBookings(List<Booking> bookings) {
+        bookings.sort(Comparator.comparing(Booking::getBookedFrom));
+        for (int i = 0; i < bookings.size(); i++) {
+            List<Booking> tempList = new ArrayList<>();
+            if (bookings.get(i).getBookedTo().equals(bookings.get(i + 1).getBookedFrom())) {
+                tempList.add(bookings.get(i));
+                tempList.add(bookings.get(i + 1));
+            }
+
+        }
+
+        return null;
     }
 }

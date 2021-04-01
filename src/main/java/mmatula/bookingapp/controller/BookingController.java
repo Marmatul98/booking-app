@@ -81,6 +81,16 @@ public class BookingController {
         }
     }
 
+    @GetMapping("/api/pastUserBookings/{userId}")
+    public List<BookingDTO> getPastUserBookings(@PathVariable long userId) {
+        try {
+            return this.bookingModelMapper.entityListToDTOList(this.bookingService.getPastBookingsByUserId(userId));
+        } catch (Exception e) {
+            this.exceptionLogService.addException(e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     @GetMapping("/api/bookings/{id}")
     public List<BookingDTO> getBookingsBySportsFieldId(@PathVariable int id) {
         try {

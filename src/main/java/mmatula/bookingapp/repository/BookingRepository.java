@@ -24,4 +24,8 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> getBookingsByConfirmedTrueOrderByDate();
 
     List<Booking> getBookingsByRequestedFalseAndDateBefore(LocalDate date);
+
+    List<Booking> getBookingsByUserId(long userId);
+
+    List<Booking> getBookingsByUserIdAndDateBeforeAndBookedFromBefore(long userId, LocalDate date, LocalTime time);
 }
