@@ -11,7 +11,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class BookingDTO {
 
-    private long bookingId;
+    private Long bookingId;
     private String bookedDate;
     private String startTime;
     private String endTime;

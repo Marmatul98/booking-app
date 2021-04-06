@@ -227,17 +227,55 @@ public class BookingService {
         return returnedList;
     }
 
+    public List<Booking> getFutureBookingsByUserId(long userId) {
+        List<Booking> returnedBookings = new ArrayList<>();
+        for (SportsField sportsField : this.sportsFieldRepository.findAll()) {
+            returnedBookings.addAll(
+                    groupSameDayBookings(
+                            this.bookingRepository.getBookingsByUserIdAndSportsFieldIdAndDateAndBookedFromAfter(
+                                    userId, sportsField.getId(), LocalDate.now(), LocalTime.now()
+                            )
+                    )
+            );
+            returnedBookings.addAll(
+                    groupSameDayBookings(
+                            this.bookingRepository.getBookingsByUserIdAndSportsFieldIdAndDateAfter(
+                                    userId, sportsField.getId(), LocalDate.now()
+                            )
+                    )
+            );
+        }
+        returnedBookings.sort(Comparator.comparing(Booking::getDate));
+        return returnedBookings;
+    }
 
     public List<Booking> getPastBookingsByUserId(long userId) {
-        return groupSameDayBookings(
-                this.bookingRepository.getBookingsByUserIdAndDateBeforeAndBookedFromBefore(userId, LocalDate.now(), LocalTime.now()));
+        List<Booking> returnedBookings = new ArrayList<>();
+        for (SportsField sportsField : this.sportsFieldRepository.findAll()) {
+            returnedBookings.addAll(
+                    groupSameDayBookings(
+                            this.bookingRepository.getBookingsByUserIdAndSportsFieldIdAndDateAndBookedFromBefore(
+                                    userId, sportsField.getId(), LocalDate.now(), LocalTime.now()
+                            )
+                    )
+            );
+            returnedBookings.addAll(
+                    groupSameDayBookings(
+                            this.bookingRepository.getBookingsByUserIdAndSportsFieldIdAndDateBefore(
+                                    userId, sportsField.getId(), LocalDate.now()
+                            )
+                    )
+            );
+        }
+        returnedBookings.sort(Comparator.comparing(Booking::getDate));
+        return returnedBookings;
     }
 
     private List<Booking> groupSameDayBookings(List<Booking> bookings) {
-        List<LocalDate> dates = bookings
+        Set<LocalDate> dates = bookings
                 .stream()
                 .map(Booking::getDate)
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
 
         List<Booking> returned = new ArrayList<>();
 
@@ -256,15 +294,54 @@ public class BookingService {
 
     private List<Booking> groupTimesInBookings(List<Booking> bookings) {
         bookings.sort(Comparator.comparing(Booking::getBookedFrom));
-        for (int i = 0; i < bookings.size(); i++) {
-            List<Booking> tempList = new ArrayList<>();
-            if (bookings.get(i).getBookedTo().equals(bookings.get(i + 1).getBookedFrom())) {
-                tempList.add(bookings.get(i));
-                tempList.add(bookings.get(i + 1));
-            }
 
+        List<Integer> indexes = getIndexesForSublist(bookings);
+        List<Booking> groupedBookings = new ArrayList<>();
+
+        if (indexes.isEmpty()) {
+            groupedBookings.add(createBookingWithGroupedBookingTimes(bookings));
+        } else {
+            for (int i = 0; i < indexes.size(); i++) {
+
+                //start of indexes
+                if (i == 0) {
+                    groupedBookings.add(createBookingWithGroupedBookingTimes(bookings.subList(0, indexes.get(i) + 1)));
+                    continue;
+                }
+
+                //end of indexes
+                if (i + 1 == indexes.size()) {
+                    groupedBookings.add(createBookingWithGroupedBookingTimes(bookings.subList(indexes.get(i - 1) + 1, indexes.get(i) + 1)));
+                    groupedBookings.add(createBookingWithGroupedBookingTimes(bookings.subList(indexes.get(i) + 1, bookings.size())));
+                    continue;
+                }
+
+                groupedBookings.add(createBookingWithGroupedBookingTimes(bookings.subList(indexes.get(i - 1) + 1, indexes.get(i) + 1)));
+            }
         }
 
-        return null;
+        return groupedBookings;
+    }
+
+    private List<Integer> getIndexesForSublist(List<Booking> bookings) {
+        List<Integer> indexes = new ArrayList<>();
+
+        for (int i = 0; i < bookings.size(); i++) {
+            if (i + 1 < bookings.size() && !bookings.get(i).getBookedTo().equals(bookings.get(i + 1).getBookedFrom())) {
+                indexes.add(i);
+            }
+        }
+        return indexes;
+    }
+
+    private Booking createBookingWithGroupedBookingTimes(List<Booking> bookings) {
+        Booking booking = new Booking();
+        booking.setId(null);
+        booking.setDate(bookings.get(0).getDate());
+        booking.setSportsField(bookings.get(0).getSportsField());
+        booking.setUser(bookings.get(0).getUser());
+        booking.setBookedFrom(bookings.get(0).getBookedFrom());
+        booking.setBookedTo(bookings.get(bookings.size() - 1).getBookedTo());
+        return booking;
     }
 }
