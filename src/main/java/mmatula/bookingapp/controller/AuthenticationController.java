@@ -1,6 +1,7 @@
 package mmatula.bookingapp.controller;
 
 import mmatula.bookingapp.dto.UserDTO;
+import mmatula.bookingapp.request.PasswordResetBody;
 import mmatula.bookingapp.security.JwtUtil;
 import mmatula.bookingapp.security.dto.AuthenticationRequest;
 import mmatula.bookingapp.security.dto.AuthenticationResponse;
@@ -68,5 +69,24 @@ public class AuthenticationController {
         return ResponseEntity.ok(new AuthenticationResponse(jwt));
     }
 
+    @PostMapping("/requestPasswordReset")
+    public void requestPasswordReset(@RequestBody String email) {
+        try {
+            authenticationService.requestPasswordReset(email);
+        } catch (Exception e) {
+            this.exceptionLogService.addException(e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PutMapping("/resetPassword")
+    public void resetPassword(@RequestBody PasswordResetBody passwordResetBody) {
+        try {
+            authenticationService.resetPassword(passwordResetBody);
+        } catch (Exception e) {
+            this.exceptionLogService.addException(e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 
 }
