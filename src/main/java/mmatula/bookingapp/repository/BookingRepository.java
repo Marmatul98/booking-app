@@ -27,11 +27,11 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     List<Booking> getBookingsByUserId(long userId);
 
-    List<Booking> getBookingsByUserIdAndSportsFieldIdAndDateBefore(long userId, int sportsFieldId, LocalDate date);
+    List<Booking> getBookingsByUserEmailAndSportsFieldIdAndDateBefore(String email, int sportsFieldId, LocalDate date);
 
-    List<Booking> getBookingsByUserIdAndSportsFieldIdAndDateAndBookedFromBefore(long userId, int sportsFieldId, LocalDate date, LocalTime time);
+    List<Booking> getBookingsByUserEmailAndSportsFieldIdAndDateAndBookedFromBefore(String email, int sportsFieldId, LocalDate date, LocalTime time);
 
-    List<Booking> getBookingsByUserIdAndSportsFieldIdAndDateAfter(long userId, int sportsFieldId, LocalDate date);
+    List<Booking> getBookingsByUserEmailAndSportsFieldIdAndDateAfter(String email, int sportsFieldId, LocalDate date);
 
-    List<Booking> getBookingsByUserIdAndSportsFieldIdAndDateAndBookedFromAfter(long userId, int sportsFieldId, LocalDate date, LocalTime time);
+    List<Booking> getBookingsByUserEmailAndSportsFieldIdAndDateAndBookedFromAfter(String email, int sportsFieldId, LocalDate date, LocalTime time);
 }

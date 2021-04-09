@@ -15,7 +15,7 @@ import java.time.LocalTime;
 public class Booking {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -33,8 +33,4 @@ public class Booking {
     private LocalTime bookedTo;
 
     private LocalDate date;
-
-    public boolean getRequested() {
-        return requested;
-    }
 }

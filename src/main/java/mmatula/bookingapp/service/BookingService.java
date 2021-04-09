@@ -28,14 +28,16 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final SportsFieldRepository sportsFieldRepository;
     private final UserRepository userRepository;
+    private final EmailService emailService;
 
     private static final Logger logger = LoggerFactory.getLogger(BookingService.class);
 
     @Autowired
-    public BookingService(BookingRepository bookingRepository, SportsFieldRepository sportsFieldRepository, UserRepository userRepository) {
+    public BookingService(BookingRepository bookingRepository, SportsFieldRepository sportsFieldRepository, UserRepository userRepository, EmailService emailService) {
         this.bookingRepository = bookingRepository;
         this.sportsFieldRepository = sportsFieldRepository;
         this.userRepository = userRepository;
+        this.emailService = emailService;
     }
 
     public List<Booking> getAllBookings() {
@@ -55,7 +57,7 @@ public class BookingService {
                         .startTime(bookingCreationRequest.getStartTime())
                         .endTime(bookingCreationRequest.getEndTime())
                         .duration(Duration.ofMinutes(bookingCreationRequest.getDurationInMinutes()))
-                        .sportsField(this.sportsFieldRepository.findById(bookingCreationRequest.getSportsFieldId()).orElseThrow())
+                        .sportsFields(this.sportsFieldRepository.findByIdIn(bookingCreationRequest.getSportsFieldIds()))
                         .build())
                 .collect(Collectors.toList());
 
@@ -64,38 +66,37 @@ public class BookingService {
 
 
     private void createBookingsForSelectedDateAndTime(BookingCreationParams bookingCreationParams) {
+        if (areSportsFieldsFreeInDateAndTime(bookingCreationParams)) {
+            for (SportsField sportsField : bookingCreationParams.getSportsFields()) {
+                User user = bookingCreationParams.getUser();
 
-        if (isSportsFieldFreeInDateAndTime(bookingCreationParams)) {
+                List<Booking> bookings = new ArrayList<>();
 
-            SportsField sportsField = bookingCreationParams.getSportsField();
-            User user = bookingCreationParams.getUser();
+                Booking lastBooking = new Booking();
+                lastBooking.setBookedFrom(bookingCreationParams.getStartTime());
+                lastBooking.setBookedTo(bookingCreationParams.getStartTime().plus(bookingCreationParams.getDuration()));
+                lastBooking.setDate(bookingCreationParams.getDate());
+                lastBooking.setSportsField(sportsField);
+                lastBooking.setUser(user);
+                lastBooking.setConfirmed(bookingCreationParams.getConfirmed());
+                lastBooking.setRequested(bookingCreationParams.getRequested());
+                bookings.add(lastBooking);
 
-            List<Booking> bookings = new ArrayList<>();
+                while (lastBooking.getBookedTo().isBefore(bookingCreationParams.getEndTime())) {
+                    Booking booking = new Booking();
+                    booking.setBookedFrom(lastBooking.getBookedTo());
+                    booking.setBookedTo(booking.getBookedFrom().plus(bookingCreationParams.getDuration()));
+                    booking.setDate(bookingCreationParams.getDate());
+                    booking.setSportsField(sportsField);
+                    booking.setUser(user);
+                    booking.setRequested(bookingCreationParams.getRequested());
+                    booking.setConfirmed(bookingCreationParams.getConfirmed());
+                    bookings.add(booking);
+                    lastBooking = booking;
+                }
 
-            Booking lastBooking = new Booking();
-            lastBooking.setBookedFrom(bookingCreationParams.getStartTime());
-            lastBooking.setBookedTo(bookingCreationParams.getStartTime().plus(bookingCreationParams.getDuration()));
-            lastBooking.setDate(bookingCreationParams.getDate());
-            lastBooking.setSportsField(sportsField);
-            lastBooking.setUser(user);
-            lastBooking.setConfirmed(bookingCreationParams.getConfirmed());
-            lastBooking.setRequested(bookingCreationParams.getRequested());
-            bookings.add(lastBooking);
-
-            while (lastBooking.getBookedTo().isBefore(bookingCreationParams.getEndTime())) {
-                Booking booking = new Booking();
-                booking.setBookedFrom(lastBooking.getBookedTo());
-                booking.setBookedTo(booking.getBookedFrom().plus(bookingCreationParams.getDuration()));
-                booking.setDate(bookingCreationParams.getDate());
-                booking.setSportsField(sportsField);
-                booking.setUser(user);
-                booking.setRequested(bookingCreationParams.getRequested());
-                booking.setConfirmed(bookingCreationParams.getConfirmed());
-                bookings.add(booking);
-                lastBooking = booking;
+                bookingRepository.saveAll(bookings);
             }
-
-            bookingRepository.saveAll(bookings);
         } else throw new IllegalArgumentException("Sports field is not free in selected date and time");
     }
 
@@ -135,6 +136,7 @@ public class BookingService {
         Booking booking = this.bookingRepository.findById(bookingId).orElseThrow();
         booking.setConfirmed(true);
         this.bookingRepository.save(booking);
+        this.emailService.sendConfirmationEmail(booking);
     }
 
     public List<Booking> getAllRequestedBookings() {
@@ -164,7 +166,7 @@ public class BookingService {
                         .startTime(bookingCreationRequest.getStartTime())
                         .endTime(bookingCreationRequest.getEndTime())
                         .duration(Duration.ofMinutes(bookingCreationRequest.getDurationInMinutes()))
-                        .sportsField(this.sportsFieldRepository.findById(bookingCreationRequest.getSportsFieldId()).orElseThrow())
+                        .sportsFields(this.sportsFieldRepository.findByIdIn(bookingCreationRequest.getSportsFieldIds()))
                         .requested(true)
                         .confirmed(true)
                         .user(this.userRepository.findById(1L).orElseThrow())
@@ -174,12 +176,18 @@ public class BookingService {
         paramsList.forEach(this::createBookingsForSelectedDateAndTime);
     }
 
-    private boolean isSportsFieldFreeInDateAndTime(BookingCreationParams bookingCreationParams) {
-        return this.bookingRepository.getBookingsBySportsFieldAndDateAndBookedFromBetween(
-                bookingCreationParams.getSportsField(),
-                bookingCreationParams.getDate(),
-                bookingCreationParams.getStartTime(),
-                bookingCreationParams.getEndTime()).isEmpty();
+    private boolean areSportsFieldsFreeInDateAndTime(BookingCreationParams bookingCreationParams) {
+        for (SportsField sportsField : bookingCreationParams.getSportsFields()) {
+            if (!this.bookingRepository.getBookingsBySportsFieldAndDateAndBookedFromBetween(
+                    sportsField,
+                    bookingCreationParams.getDate(),
+                    bookingCreationParams.getStartTime(),
+                    bookingCreationParams.getEndTime())
+                    .isEmpty()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private List<LocalDate> getDatesUntilInclusive(LocalDate startDate, LocalDate endDate) {
@@ -197,10 +205,6 @@ public class BookingService {
                     logger.info("Deleting booking dated " + booking.getDate().toString());
                     this.bookingRepository.delete(booking);
                 });
-    }
-
-    public List<Booking> getAllBookingsByDate(LocalDate date) {
-        return this.bookingRepository.getBookingsByDate(date);
     }
 
     public List<String> getAvailableBookingTimeSlots() {
@@ -227,20 +231,20 @@ public class BookingService {
         return returnedList;
     }
 
-    public List<Booking> getFutureBookingsByUserId(long userId) {
+    public List<Booking> getFutureBookingsByUserEmail(String email) {
         List<Booking> returnedBookings = new ArrayList<>();
         for (SportsField sportsField : this.sportsFieldRepository.findAll()) {
             returnedBookings.addAll(
                     groupSameDayBookings(
-                            this.bookingRepository.getBookingsByUserIdAndSportsFieldIdAndDateAndBookedFromAfter(
-                                    userId, sportsField.getId(), LocalDate.now(), LocalTime.now()
+                            this.bookingRepository.getBookingsByUserEmailAndSportsFieldIdAndDateAndBookedFromAfter(
+                                    email, sportsField.getId(), LocalDate.now(), LocalTime.now()
                             )
                     )
             );
             returnedBookings.addAll(
                     groupSameDayBookings(
-                            this.bookingRepository.getBookingsByUserIdAndSportsFieldIdAndDateAfter(
-                                    userId, sportsField.getId(), LocalDate.now()
+                            this.bookingRepository.getBookingsByUserEmailAndSportsFieldIdAndDateAfter(
+                                    email, sportsField.getId(), LocalDate.now()
                             )
                     )
             );
@@ -249,20 +253,20 @@ public class BookingService {
         return returnedBookings;
     }
 
-    public List<Booking> getPastBookingsByUserId(long userId) {
+    public List<Booking> getPastBookingsByUserEmail(String email) {
         List<Booking> returnedBookings = new ArrayList<>();
         for (SportsField sportsField : this.sportsFieldRepository.findAll()) {
             returnedBookings.addAll(
                     groupSameDayBookings(
-                            this.bookingRepository.getBookingsByUserIdAndSportsFieldIdAndDateAndBookedFromBefore(
-                                    userId, sportsField.getId(), LocalDate.now(), LocalTime.now()
+                            this.bookingRepository.getBookingsByUserEmailAndSportsFieldIdAndDateAndBookedFromBefore(
+                                    email, sportsField.getId(), LocalDate.now(), LocalTime.now()
                             )
                     )
             );
             returnedBookings.addAll(
                     groupSameDayBookings(
-                            this.bookingRepository.getBookingsByUserIdAndSportsFieldIdAndDateBefore(
-                                    userId, sportsField.getId(), LocalDate.now()
+                            this.bookingRepository.getBookingsByUserEmailAndSportsFieldIdAndDateBefore(
+                                    email, sportsField.getId(), LocalDate.now()
                             )
                     )
             );

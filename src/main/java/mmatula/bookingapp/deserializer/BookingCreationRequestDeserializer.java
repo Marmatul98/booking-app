@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 public class BookingCreationRequestDeserializer extends StdDeserializer<BookingCreationRequest> {
 
@@ -30,11 +32,14 @@ public class BookingCreationRequestDeserializer extends StdDeserializer<BookingC
         LocalDate endDate = parseToLocalDate(node.get("endDate").asText());
         LocalTime endTime = parseToLocalTime(node.get("endTime").asText());
 
-        int sportsFieldId = node.get("sportsFieldId").asInt();
+        List<Integer> sportsFieldIds = new ArrayList<>();
+        node.get("sportsFieldIds")
+                .elements()
+                .forEachRemaining(jsonNode -> sportsFieldIds.add(jsonNode.asInt()));
         int durationInMinutes = node.get("durationInMinutes").asInt();
 
         return new BookingCreationRequest(
-                sportsFieldId,
+                sportsFieldIds,
                 startDate,
                 endDate,
                 startTime,

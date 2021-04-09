@@ -1,5 +1,6 @@
 package mmatula.bookingapp.service;
 
+import mmatula.bookingapp.model.Booking;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -23,5 +24,13 @@ public class EmailService {
         message.setText(messageText);
 
         javaMailSender.send(message);
+    }
+
+    public void sendConfirmationEmail(Booking booking) {
+        this.sendEmail(
+                booking.getUser().getEmail(),
+                "Potvrzení rezervace",
+                "Rezervace " + booking.getDate() + "potvrzena volejte na cislo"
+        );
     }
 }

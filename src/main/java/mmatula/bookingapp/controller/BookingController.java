@@ -81,20 +81,20 @@ public class BookingController {
         }
     }
 
-    @GetMapping("/api/pastUserBookings/{userId}")
-    public List<BookingDTO> getPastUserBookings(@PathVariable long userId) {
+    @GetMapping("/api/pastUserBookings/{email}")
+    public List<BookingDTO> getPastUserBookings(@PathVariable String email) {
         try {
-            return this.bookingModelMapper.entityListToDTOList(this.bookingService.getPastBookingsByUserId(userId));
+            return this.bookingModelMapper.entityListToDTOList(this.bookingService.getPastBookingsByUserEmail(email));
         } catch (Exception e) {
             this.exceptionLogService.addException(e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    @GetMapping("/api/futureUserBookings/{userId}")
-    public List<BookingDTO> getFutureUserBookings(@PathVariable long userId) {
+    @GetMapping("/api/futureUserBookings/{email}")
+    public List<BookingDTO> getFutureUserBookings(@PathVariable String email) {
         try {
-            return this.bookingModelMapper.entityListToDTOList(this.bookingService.getFutureBookingsByUserId(userId));
+            return this.bookingModelMapper.entityListToDTOList(this.bookingService.getFutureBookingsByUserEmail(email));
         } catch (Exception e) {
             this.exceptionLogService.addException(e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -112,9 +112,11 @@ public class BookingController {
     }
 
     @PostMapping("/admin/generateBookings")
-    public void generateWeeklyBookings(@RequestBody BookingCreationRequest bookingCreationRequest) {
+    public void generateEmptyBookings(@RequestBody BookingCreationRequest bookingCreationRequest) {
         try {
             this.bookingService.generateEmptyBookingsForDatesRange(bookingCreationRequest);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT);
         } catch (Exception e) {
             this.exceptionLogService.addException(e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);

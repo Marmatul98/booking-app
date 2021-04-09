@@ -6,10 +6,11 @@ import mmatula.bookingapp.model.User;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 public class BookingCreationParams {
 
-    private final SportsField sportsField;
+    private final List<SportsField> sportsFields;
     private final LocalDate date;
     private final LocalTime startTime;
     private final LocalTime endTime;
@@ -20,8 +21,15 @@ public class BookingCreationParams {
 
     private final User user;
 
-    public SportsField getSportsField() {
-        return sportsField;
+    private BookingCreationParams(Builder builder) {
+        this.sportsFields = builder.sportsFields;
+        this.date = builder.date;
+        this.startTime = builder.startTime;
+        this.endTime = builder.endTime;
+        this.duration = builder.duration;
+        this.requested = builder.requested;
+        this.confirmed = builder.confirmed;
+        this.user = builder.user;
     }
 
     public LocalDate getDate() {
@@ -52,20 +60,13 @@ public class BookingCreationParams {
         return user;
     }
 
-    private BookingCreationParams(Builder builder) {
-        this.sportsField = builder.sportsField;
-        this.date = builder.date;
-        this.startTime = builder.startTime;
-        this.endTime = builder.endTime;
-        this.duration = builder.duration;
-        this.requested = builder.requested;
-        this.confirmed = builder.confirmed;
-        this.user = builder.user;
+    public List<SportsField> getSportsFields() {
+        return sportsFields;
     }
 
     public static class Builder {
 
-        private SportsField sportsField;
+        private List<SportsField> sportsFields;
         private LocalTime startTime;
         private LocalTime endTime;
         private Duration duration;
@@ -77,8 +78,8 @@ public class BookingCreationParams {
 
         private User user;
 
-        public Builder sportsField(SportsField sportsField) {
-            this.sportsField = sportsField;
+        public Builder sportsFields(List<SportsField> sportsFields) {
+            this.sportsFields = sportsFields;
             return this;
         }
 

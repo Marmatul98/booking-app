@@ -6,6 +6,7 @@ import mmatula.bookingapp.deserializer.BookingCreationRequestDeserializer;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 
 @ToString
@@ -16,7 +17,7 @@ import java.time.LocalTime;
 @JsonDeserialize(using = BookingCreationRequestDeserializer.class)
 public class BookingCreationRequest {
 
-    private int sportsFieldId;
+    private List<Integer> sportsFieldIds;
     private LocalDate startDate;
     private LocalDate endDate;
     private LocalTime startTime;
