@@ -1,5 +1,6 @@
 package mmatula.bookingapp.service;
 
+import mmatula.bookingapp.Util.PhoneNumberUtil;
 import mmatula.bookingapp.dto.UserDTO;
 import mmatula.bookingapp.enums.ERole;
 import mmatula.bookingapp.model.PasswordResetToken;
@@ -22,13 +23,15 @@ public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final PhoneNumberUtil phoneNumberUtil;
 
     @Autowired
-    public AuthenticationService(UserRepository userRepository, PasswordEncoder passwordEncoder, EmailService emailService, PasswordResetTokenRepository passwordResetTokenRepository) {
+    public AuthenticationService(UserRepository userRepository, PasswordEncoder passwordEncoder, EmailService emailService, PasswordResetTokenRepository passwordResetTokenRepository, PhoneNumberUtil phoneNumberUtil) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
+        this.phoneNumberUtil = phoneNumberUtil;
     }
 
     public void register(UserDTO userDTO) {
@@ -42,17 +45,9 @@ public class AuthenticationService {
                 userDTO.getLastName().trim(),
                 userDTO.getEmail().toLowerCase().trim(),
                 passwordEncoder.encode(userDTO.getPassword()),
-                validatePhoneNumber(userDTO.getPhoneNumber()));
+                phoneNumberUtil.validatePhoneNumber(userDTO.getPhoneNumber()));
         user.setRole(ERole.USER);
         this.userRepository.save(user);
-    }
-
-    private String validatePhoneNumber(String phoneNumber) {
-        if (phoneNumber.length() < 13 || !phoneNumber.matches("\\+[0-9]{12}")) {
-            throw new IllegalArgumentException(phoneNumber);
-        } else {
-            return phoneNumber;
-        }
     }
 
     public void requestPasswordReset(String email) {

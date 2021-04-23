@@ -30,8 +30,6 @@ public class User {
     private String password;
     private String phoneNumber;
 
-    private boolean guest;
-
     @OneToMany(mappedBy = "user")
     private Set<Booking> bookings = new HashSet<>();
 

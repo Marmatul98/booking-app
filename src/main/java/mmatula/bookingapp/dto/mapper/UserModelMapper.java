@@ -12,7 +12,7 @@ public class UserModelMapper {
                 user.getFirstName(),
                 user.getLastName(),
                 user.getEmail(),
-                user.getPassword(),
+                "",
                 user.getPhoneNumber()
         );
 

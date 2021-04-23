@@ -27,21 +27,13 @@ public class SportsFieldService {
         return this.sportsFieldRepository.findAll();
     }
 
-    public SportsField getSportsFieldById(int id) {
-        return this.sportsFieldRepository.findById(id).orElseThrow();
-    }
-
-    public void addSportsFieldByName(String name) throws EntityUniqueNameAlreadyExistsException {
+    public void addSportsField(String name) throws EntityUniqueNameAlreadyExistsException {
 
         if (this.sportsFieldRepository.findByName(name) != null) {
             throw new EntityUniqueNameAlreadyExistsException();
         }
 
         this.sportsFieldRepository.save(new SportsField(name));
-    }
-
-    public void addSportsField(SportsField sportsField) {
-        this.sportsFieldRepository.save(sportsField);
     }
 
     public void deleteSportsFieldById(int id) {

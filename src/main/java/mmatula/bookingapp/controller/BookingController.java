@@ -1,10 +1,11 @@
 package mmatula.bookingapp.controller;
 
+import mmatula.bookingapp.Util.BookingSortingUtil;
 import mmatula.bookingapp.dto.BookingDTO;
-import mmatula.bookingapp.dto.UserDTO;
 import mmatula.bookingapp.dto.mapper.BookingModelMapper;
 import mmatula.bookingapp.model.Booking;
 import mmatula.bookingapp.request.BookingCreationRequest;
+import mmatula.bookingapp.request.BookingRequest;
 import mmatula.bookingapp.service.BookingService;
 import mmatula.bookingapp.service.ExceptionLogService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,12 +23,14 @@ public class BookingController {
     private final BookingService bookingService;
     private final BookingModelMapper bookingModelMapper;
     private final ExceptionLogService exceptionLogService;
+    private final BookingSortingUtil bookingSortingUtil;
 
     @Autowired
-    public BookingController(BookingService bookingService, BookingModelMapper bookingModelMapper, ExceptionLogService exceptionLogService) {
+    public BookingController(BookingService bookingService, BookingModelMapper bookingModelMapper, ExceptionLogService exceptionLogService, BookingSortingUtil bookingSortingUtil) {
         this.bookingService = bookingService;
         this.bookingModelMapper = bookingModelMapper;
         this.exceptionLogService = exceptionLogService;
+        this.bookingSortingUtil = bookingSortingUtil;
     }
 
     @GetMapping("/api/booking")
@@ -64,7 +67,9 @@ public class BookingController {
     @GetMapping("/admin/requestedBookings")
     public List<BookingDTO> getRequestedBookings() {
         try {
-            return this.bookingModelMapper.entityListToDTOList(this.bookingService.getAllRequestedBookings());
+            return this.bookingModelMapper.entityListToDTOList(
+                    this.bookingSortingUtil.sortByDateAndByTime(
+                            this.bookingService.getAllRequestedBookings()));
         } catch (Exception e) {
             this.exceptionLogService.addException(e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -74,7 +79,9 @@ public class BookingController {
     @GetMapping("/admin/confirmedBookings")
     public List<BookingDTO> getConfirmedBookings() {
         try {
-            return this.bookingModelMapper.entityListToDTOList(this.bookingService.getAllConfirmedBookings());
+            return this.bookingModelMapper.entityListToDTOList(
+                    this.bookingSortingUtil.sortByDateAndByTime(
+                            this.bookingService.getAllConfirmedBookings()));
         } catch (Exception e) {
             this.exceptionLogService.addException(e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -148,10 +155,12 @@ public class BookingController {
 
     }
 
-    @PutMapping("/api/booking/{bookingId}")
-    public void requestBooking(@PathVariable long bookingId, @RequestBody UserDTO userDTO) {
+    @PutMapping("/api/booking")
+    public void requestBooking(@RequestBody BookingRequest bookingRequest) {
         try {
-            this.bookingService.requestBooking(bookingId, userDTO);
+            this.bookingService.requestBooking(bookingRequest);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT);
         } catch (Exception e) {
             this.exceptionLogService.addException(e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);

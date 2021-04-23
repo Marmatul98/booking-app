@@ -41,7 +41,7 @@ public class SportsFieldController {
     @PostMapping("/admin/sportsField")
     public void addSportsField(@RequestBody String name) {
         try {
-            this.sportsFieldService.addSportsFieldByName(name);
+            this.sportsFieldService.addSportsField(name);
         } catch (EntityUniqueNameAlreadyExistsException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT);
         } catch (Exception e) {

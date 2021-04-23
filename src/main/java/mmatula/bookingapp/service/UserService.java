@@ -1,5 +1,6 @@
 package mmatula.bookingapp.service;
 
+import mmatula.bookingapp.Util.PhoneNumberUtil;
 import mmatula.bookingapp.dto.UserDTO;
 import mmatula.bookingapp.model.User;
 import mmatula.bookingapp.repository.UserRepository;
@@ -11,10 +12,12 @@ import org.springframework.stereotype.Service;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PhoneNumberUtil phoneNumberUtil;
 
     @Autowired
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, PhoneNumberUtil phoneNumberUtil) {
         this.userRepository = userRepository;
+        this.phoneNumberUtil = phoneNumberUtil;
     }
 
     public User getUserByEmail(String email) {
@@ -26,10 +29,10 @@ public class UserService {
     }
 
     public void updateUser(UserDTO userDTO) {
-        User user = this.userRepository.findByEmail(userDTO.getEmail());
-        user.setFirstName(user.getFirstName());
-        user.setLastName(user.getLastName());
-        user.setPhoneNumber(user.getPhoneNumber());
+        User user = getUserByEmail(userDTO.getEmail());
+        user.setFirstName(userDTO.getFirstName().trim());
+        user.setLastName(userDTO.getLastName().trim());
+        user.setPhoneNumber(this.phoneNumberUtil.validatePhoneNumber(userDTO.getPhoneNumber().trim()));
         this.userRepository.save(user);
     }
 }

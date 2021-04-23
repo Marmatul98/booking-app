@@ -1,5 +1,6 @@
 package mmatula.bookingapp.request;
 
+
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.*;
 import mmatula.bookingapp.deserializer.BookingCreationRequestDeserializer;

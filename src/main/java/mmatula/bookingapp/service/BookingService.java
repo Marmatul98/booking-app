@@ -1,6 +1,5 @@
 package mmatula.bookingapp.service;
 
-import mmatula.bookingapp.dto.UserDTO;
 import mmatula.bookingapp.model.Booking;
 import mmatula.bookingapp.model.SportsField;
 import mmatula.bookingapp.model.User;
@@ -9,6 +8,7 @@ import mmatula.bookingapp.repository.BookingRepository;
 import mmatula.bookingapp.repository.SportsFieldRepository;
 import mmatula.bookingapp.repository.UserRepository;
 import mmatula.bookingapp.request.BookingCreationRequest;
+import mmatula.bookingapp.request.BookingRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,15 +29,17 @@ public class BookingService {
     private final SportsFieldRepository sportsFieldRepository;
     private final UserRepository userRepository;
     private final EmailService emailService;
+    private final UserService userService;
 
     private static final Logger logger = LoggerFactory.getLogger(BookingService.class);
 
     @Autowired
-    public BookingService(BookingRepository bookingRepository, SportsFieldRepository sportsFieldRepository, UserRepository userRepository, EmailService emailService) {
+    public BookingService(BookingRepository bookingRepository, SportsFieldRepository sportsFieldRepository, UserRepository userRepository, EmailService emailService, UserService userService) {
         this.bookingRepository = bookingRepository;
         this.sportsFieldRepository = sportsFieldRepository;
         this.userRepository = userRepository;
         this.emailService = emailService;
+        this.userService = userService;
     }
 
     public List<Booking> getAllBookings() {
@@ -64,9 +66,8 @@ public class BookingService {
         paramsList.forEach(this::createBookingsForSelectedDateAndTime);
     }
 
-
     private void createBookingsForSelectedDateAndTime(BookingCreationParams bookingCreationParams) {
-        if (areSportsFieldsFreeInDateAndTime(bookingCreationParams)) {
+        if (areSportsFieldsNonExistentInDateAndTime(bookingCreationParams)) {
             for (SportsField sportsField : bookingCreationParams.getSportsFields()) {
                 User user = bookingCreationParams.getUser();
 
@@ -118,18 +119,21 @@ public class BookingService {
         return this.bookingRepository.getBookingsBySportsFieldIdAndDateOrderById(sportsFieldId, date);
     }
 
-    public void requestBooking(long bookingId, UserDTO userDTO) {
-        Booking booking = this.bookingRepository.findById(bookingId).orElseThrow();
+    public void requestBooking(BookingRequest bookingRequest) {
+        User user = userService.getUserByEmail(bookingRequest.getUser().getEmail());
+        userService.updateUser(bookingRequest.getUser());
 
-        User user = userRepository.findByEmail(userDTO.getEmail());
-        if (user == null) {
-            throw new IllegalArgumentException("User is null");
-        }
-        booking.setRequested(true);
-        booking.setConfirmed(false);
-        booking.setUser(user);
-        this.userRepository.save(user);
-        this.bookingRepository.save(booking);
+        bookingRequest.getBookings()
+                .forEach(bookingDTO -> {
+                    Booking booking = this.bookingRepository.findById(bookingDTO.getBookingId()).orElseThrow();
+                    if (!booking.getConfirmed() && !booking.isRequested() && booking.getUser() == null) {
+                        booking.setUser(user);
+                        booking.setRequested(true);
+                        booking.setConfirmed(false);
+                        this.userRepository.save(user);
+                        this.bookingRepository.save(booking);
+                    } else throw new IllegalArgumentException("Booking is occupied");
+                });
     }
 
     public void confirmBooking(long bookingId) {
@@ -151,10 +155,7 @@ public class BookingService {
         booking.setRequested(false);
         booking.setUser(null);
         this.bookingRepository.save(booking);
-
-        if (user.isGuest() && user.getBookings().isEmpty()) {
-            this.userRepository.delete(user);
-        } else this.userRepository.save(user);
+        this.userRepository.save(user);
     }
 
     public void addAdminBooking(BookingCreationRequest bookingCreationRequest) {
@@ -176,7 +177,7 @@ public class BookingService {
         paramsList.forEach(this::createBookingsForSelectedDateAndTime);
     }
 
-    private boolean areSportsFieldsFreeInDateAndTime(BookingCreationParams bookingCreationParams) {
+    private boolean areSportsFieldsNonExistentInDateAndTime(BookingCreationParams bookingCreationParams) {
         for (SportsField sportsField : bookingCreationParams.getSportsFields()) {
             if (!this.bookingRepository.getBookingsBySportsFieldAndDateAndBookedFromBetween(
                     sportsField,
@@ -236,14 +237,14 @@ public class BookingService {
         for (SportsField sportsField : this.sportsFieldRepository.findAll()) {
             returnedBookings.addAll(
                     groupSameDayBookings(
-                            this.bookingRepository.getBookingsByUserEmailAndSportsFieldIdAndDateAndBookedFromAfter(
+                            this.bookingRepository.getBookingsByUserEmailAndConfirmedTrueAndSportsFieldIdAndDateAndBookedFromAfter(
                                     email, sportsField.getId(), LocalDate.now(), LocalTime.now()
                             )
                     )
             );
             returnedBookings.addAll(
                     groupSameDayBookings(
-                            this.bookingRepository.getBookingsByUserEmailAndSportsFieldIdAndDateAfter(
+                            this.bookingRepository.getBookingsByUserEmailAndConfirmedTrueAndSportsFieldIdAndDateAfter(
                                     email, sportsField.getId(), LocalDate.now()
                             )
                     )
@@ -258,14 +259,14 @@ public class BookingService {
         for (SportsField sportsField : this.sportsFieldRepository.findAll()) {
             returnedBookings.addAll(
                     groupSameDayBookings(
-                            this.bookingRepository.getBookingsByUserEmailAndSportsFieldIdAndDateAndBookedFromBefore(
+                            this.bookingRepository.getBookingsByUserEmailAndConfirmedTrueAndSportsFieldIdAndDateAndBookedFromBefore(
                                     email, sportsField.getId(), LocalDate.now(), LocalTime.now()
                             )
                     )
             );
             returnedBookings.addAll(
                     groupSameDayBookings(
-                            this.bookingRepository.getBookingsByUserEmailAndSportsFieldIdAndDateBefore(
+                            this.bookingRepository.getBookingsByUserEmailAndConfirmedTrueAndSportsFieldIdAndDateBefore(
                                     email, sportsField.getId(), LocalDate.now()
                             )
                     )

@@ -7,13 +7,28 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.*;
 import java.util.function.Function;
 
 @Service
 public class JwtUtil {
 
-    private final String SECRET_KEY = "secret";
+    private String SECRET_KEY = "secret";
+
+    public JwtUtil() {
+//        try {
+//            File myObj = new File("/home/centos/secret.txt");
+//            Scanner myReader = new Scanner(myObj);
+//            while (myReader.hasNextLine()) {
+//                this.SECRET_KEY = myReader.nextLine();
+//            }
+//            myReader.close();
+//        } catch (FileNotFoundException ignored) {
+//        }
+    }
+
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -32,7 +47,7 @@ public class JwtUtil {
         Collection<? extends GrantedAuthority> authorities = userDetails.getAuthorities();
 
         List<String> roles = new ArrayList<>(authorities.size());
-        for (GrantedAuthority authority : authorities){
+        for (GrantedAuthority authority : authorities) {
             roles.add(authority.getAuthority());
         }
 

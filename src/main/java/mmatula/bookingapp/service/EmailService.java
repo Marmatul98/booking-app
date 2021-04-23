@@ -16,14 +16,18 @@ public class EmailService {
         this.javaMailSender = javaMailSender;
     }
 
-    public void sendEmail(String to, String subject, String messageText) {
-        SimpleMailMessage message = new SimpleMailMessage();
+    public void sendEmail(String recipient, String subject, String messageText) {
+        if (recipient != null && !recipient.isBlank()
+                && subject != null && !subject.isBlank()
+                && messageText != null && !messageText.isBlank()) {
+            SimpleMailMessage message = new SimpleMailMessage();
 
-        message.setTo(to);
-        message.setSubject(subject);
-        message.setText(messageText);
+            message.setTo(recipient);
+            message.setSubject(subject);
+            message.setText(messageText);
 
-        javaMailSender.send(message);
+            javaMailSender.send(message);
+        } else throw new IllegalArgumentException("Recipient, subject and messageText are required");
     }
 
     public void sendConfirmationEmail(Booking booking) {

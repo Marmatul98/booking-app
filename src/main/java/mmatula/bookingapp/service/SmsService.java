@@ -19,12 +19,17 @@ public class SmsService {
     }
 
     public void sendSms(SmsRequest smsRequest) {
-        MessageCreator creator = Message.creator(
-                new PhoneNumber(smsRequest.getPhoneNumber()),
-                new PhoneNumber(twilioConfiguration.getTrialNumber()),
-                smsRequest.getMessage()
-        );
 
-        creator.create();
+        if (smsRequest.getPhoneNumber() != null && !smsRequest.getPhoneNumber().isBlank()
+                && smsRequest.getMessage() != null && !smsRequest.getMessage().isBlank()) {
+
+            MessageCreator creator = Message.creator(
+                    new PhoneNumber(smsRequest.getPhoneNumber()),
+                    new PhoneNumber(twilioConfiguration.getTrialNumber()),
+                    smsRequest.getMessage()
+            );
+
+            creator.create();
+        } else throw new IllegalArgumentException("Phone number and message are required");
     }
 }
