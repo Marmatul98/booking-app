@@ -1,4 +1,4 @@
-package mmatula.bookingapp;
+package mmatula.bookingapp.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

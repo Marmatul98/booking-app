@@ -1,6 +1,6 @@
 package mmatula.bookingapp.controller;
 
-import mmatula.bookingapp.SmsRequest;
+import mmatula.bookingapp.request.SmsRequest;
 import mmatula.bookingapp.service.ExceptionLogService;
 import mmatula.bookingapp.service.SmsService;
 import org.springframework.beans.factory.annotation.Autowired;

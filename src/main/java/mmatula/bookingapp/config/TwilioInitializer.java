@@ -1,12 +1,14 @@
-package mmatula.bookingapp;
+package mmatula.bookingapp.config;
 
 import com.twilio.Twilio;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
+@EnableConfigurationProperties(TwilioConfiguration.class)
 public class TwilioInitializer {
 
     private TwilioConfiguration twilioConfiguration;
@@ -18,6 +20,4 @@ public class TwilioInitializer {
         Twilio.init(twilioConfiguration.getAccountSid(), twilioConfiguration.getAuthToken());
         logger.info("Twilio initialized .. with account sid {} ", twilioConfiguration.getAccountSid());
     }
-
-
 }

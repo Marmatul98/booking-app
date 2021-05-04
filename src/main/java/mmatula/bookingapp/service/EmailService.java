@@ -1,10 +1,13 @@
 package mmatula.bookingapp.service;
 
-import mmatula.bookingapp.model.Booking;
+import mmatula.bookingapp.dto.BookingDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 @Service
 public class EmailService {
@@ -30,11 +33,39 @@ public class EmailService {
         } else throw new IllegalArgumentException("Recipient, subject and messageText are required");
     }
 
-    public void sendConfirmationEmail(Booking booking) {
+    public void sendConfirmationEmail(BookingDTO bookingDTO) {
+
+        String message = getBaseMessage(bookingDTO) +
+                " byla potvrzena administrátorem";
+
         this.sendEmail(
-                booking.getUser().getEmail(),
+                bookingDTO.getUser().getEmail(),
                 "Potvrzení rezervace",
-                "Rezervace " + booking.getDate() + "potvrzena volejte na cislo"
+                message
         );
+    }
+
+    public void sendRemovalEmail(BookingDTO bookingDTO) {
+
+        String message = getBaseMessage(bookingDTO) +
+                " byla zamítnutá administrátorem";
+
+        this.sendEmail(
+                bookingDTO.getUser().getEmail(),
+                "Zamítnutí rezervace",
+                message
+        );
+    }
+
+    private String getBaseMessage(BookingDTO bookingDTO) {
+        return "Rezervace hřiště " +
+                bookingDTO.getSportsField().getName() +
+                " dne " +
+                LocalDate.parse(bookingDTO.getBookedDate(), DateTimeFormatter.ISO_LOCAL_DATE)
+                        .format(DateTimeFormatter.ofPattern("dd. MM. yyyy")) +
+                " v čase od " +
+                bookingDTO.getStartTime() +
+                " do " +
+                bookingDTO.getEndTime();
     }
 }

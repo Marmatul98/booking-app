@@ -23,6 +23,5 @@ public class BookingCreationRequest {
     private LocalDate endDate;
     private LocalTime startTime;
     private LocalTime endTime;
-    private int durationInMinutes;
 }
 

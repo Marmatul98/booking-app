@@ -36,15 +36,12 @@ public class BookingCreationRequestDeserializer extends StdDeserializer<BookingC
         node.get("sportsFieldIds")
                 .elements()
                 .forEachRemaining(jsonNode -> sportsFieldIds.add(jsonNode.asInt()));
-        int durationInMinutes = node.get("durationInMinutes").asInt();
-
         return new BookingCreationRequest(
                 sportsFieldIds,
                 startDate,
                 endDate,
                 startTime,
-                endTime,
-                durationInMinutes
+                endTime
         );
     }
 

@@ -3,30 +3,31 @@ package mmatula.bookingapp.security;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import mmatula.bookingapp.config.JwtConfiguration;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
 import java.util.function.Function;
 
 @Service
+@EnableConfigurationProperties(JwtConfiguration.class)
 public class JwtUtil {
 
-    private String SECRET_KEY = "secret";
+    private final String secretKey;
 
-    public JwtUtil() {
-//        try {
-//            File myObj = new File("/home/centos/secret.txt");
-//            Scanner myReader = new Scanner(myObj);
-//            while (myReader.hasNextLine()) {
-//                this.SECRET_KEY = myReader.nextLine();
-//            }
-//            myReader.close();
-//        } catch (FileNotFoundException ignored) {
-//        }
+    private final JwtConfiguration jwtConfiguration;
+
+    @Autowired
+    public JwtUtil(JwtConfiguration jwtConfiguration) {
+        this.jwtConfiguration = jwtConfiguration;
+        this.secretKey = jwtConfiguration.getSecret();
     }
 
 
@@ -39,7 +40,7 @@ public class JwtUtil {
     }
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-        final Claims claims = extractAllClaims(token);
+        final var claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
 
@@ -60,7 +61,7 @@ public class JwtUtil {
     }
 
     private Claims extractAllClaims(String token) {
-        return Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(token).getBody();
+        return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody();
     }
 
     private Boolean isTokenExpired(String token) {
@@ -73,7 +74,7 @@ public class JwtUtil {
                 .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10))
-                .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
+                .signWith(SignatureAlgorithm.HS256, secretKey)
                 .compact();
     }
 }

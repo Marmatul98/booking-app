@@ -1,6 +1,7 @@
 package mmatula.bookingapp.controller;
 
-import mmatula.bookingapp.model.ExceptionLog;
+import mmatula.bookingapp.dto.ExceptionLogDTO;
+import mmatula.bookingapp.dto.mapper.ExceptionLogModelMapper;
 import mmatula.bookingapp.service.ExceptionLogService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -15,26 +16,18 @@ import java.util.List;
 public class ExceptionLogController {
 
     private final ExceptionLogService exceptionLogService;
+    private final ExceptionLogModelMapper exceptionLogModelMapper;
 
     @Autowired
-    public ExceptionLogController(ExceptionLogService exceptionLogService) {
+    public ExceptionLogController(ExceptionLogService exceptionLogService, ExceptionLogModelMapper exceptionLogModelMapper) {
         this.exceptionLogService = exceptionLogService;
-    }
-
-    @GetMapping("/mock")
-    public void mockException() {
-        try {
-            throw new NullPointerException("adasd");
-        } catch (Exception e) {
-            this.exceptionLogService.addException(e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        this.exceptionLogModelMapper = exceptionLogModelMapper;
     }
 
     @GetMapping("/exceptionLog")
-    public List<ExceptionLog> getAllExceptionLogs() {
+    public List<ExceptionLogDTO> getAllExceptionLogs() {
         try {
-            return this.exceptionLogService.getAllExceptionLogs();
+            return this.exceptionLogModelMapper.entityListToDtoList(this.exceptionLogService.getAllExceptionLogs());
         } catch (Exception e) {
             this.exceptionLogService.addException(e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);

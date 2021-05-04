@@ -3,8 +3,8 @@ package mmatula.bookingapp.service;
 import com.twilio.rest.api.v2010.account.Message;
 import com.twilio.rest.api.v2010.account.MessageCreator;
 import com.twilio.type.PhoneNumber;
-import mmatula.bookingapp.SmsRequest;
-import mmatula.bookingapp.TwilioConfiguration;
+import mmatula.bookingapp.config.TwilioConfiguration;
+import mmatula.bookingapp.request.SmsRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

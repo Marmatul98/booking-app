@@ -2,6 +2,7 @@ package mmatula.bookingapp.repository;
 
 import mmatula.bookingapp.model.Booking;
 import mmatula.bookingapp.model.SportsField;
+import mmatula.bookingapp.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -34,4 +35,10 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> getBookingsByUserEmailAndConfirmedTrueAndSportsFieldIdAndDateAfter(String email, int sportsFieldId, LocalDate date);
 
     List<Booking> getBookingsByUserEmailAndConfirmedTrueAndSportsFieldIdAndDateAndBookedFromAfter(String email, int sportsFieldId, LocalDate date, LocalTime time);
+
+    List<Booking> getBookingsByUserAndRequestedTrueAndConfirmedFalse(User user);
+
+    List<Booking> getBookingsByUserAndConfirmedTrue(User user);
+
+    List<Booking> getBookingsByUserAndDateAndBookedFromBetween(User user, LocalDate date, LocalTime startTime, LocalTime endTime);
 }

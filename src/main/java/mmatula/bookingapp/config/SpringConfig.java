@@ -1,4 +1,4 @@
-package mmatula.bookingapp;
+package mmatula.bookingapp.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;

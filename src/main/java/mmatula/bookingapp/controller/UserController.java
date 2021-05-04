@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
+
 @RestController
 @CrossOrigin("*")
 public class UserController {
@@ -22,6 +24,16 @@ public class UserController {
         this.userService = userService;
         this.exceptionLogService = exceptionLogService;
         this.userModelMapper = userModelMapper;
+    }
+
+    @GetMapping("/admin/user")
+    public List<UserDTO> getAllUsers() {
+        try {
+            return this.userModelMapper.entityListToDtoList(this.userService.getAllUsers());
+        } catch (Exception e) {
+            this.exceptionLogService.addException(e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @GetMapping("/api/user/{email}")

@@ -167,20 +167,20 @@ public class BookingController {
         }
     }
 
-    @PutMapping("/admin/booking/confirm/{bookingId}")
-    public void confirmBooking(@PathVariable long bookingId) {
+    @PutMapping("/admin/booking/confirm")
+    public void confirmBooking(@RequestBody BookingDTO bookingDTO) {
         try {
-            this.bookingService.confirmBooking(bookingId);
+            this.bookingService.confirmGroupedBookings(bookingDTO);
         } catch (Exception e) {
             this.exceptionLogService.addException(e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    @PutMapping("/admin/booking/remove/{bookingId}")
-    public void removeBooking(@PathVariable long bookingId) {
+    @PutMapping("/admin/booking/remove")
+    public void removeBooking(@RequestBody BookingDTO bookingDTO) {
         try {
-            this.bookingService.removeBookingRequest(bookingId);
+            this.bookingService.removeGroupedBookingsRequest(bookingDTO);
         } catch (Exception e) {
             this.exceptionLogService.addException(e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);

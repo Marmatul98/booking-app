@@ -4,6 +4,7 @@ import mmatula.bookingapp.dto.BookingDTO;
 import mmatula.bookingapp.dto.UserDTO;
 import mmatula.bookingapp.model.Booking;
 import mmatula.bookingapp.model.User;
+import mmatula.bookingapp.repository.BookingRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -16,11 +17,13 @@ public class BookingModelMapper {
 
     private final SportsFieldModelMapper sportsFieldModelMapper;
     private final UserModelMapper userModelMapper;
+    private final BookingRepository bookingRepository;
 
     @Autowired
-    public BookingModelMapper(SportsFieldModelMapper sportsFieldModelMapper, UserModelMapper userModelMapper) {
+    public BookingModelMapper(SportsFieldModelMapper sportsFieldModelMapper, UserModelMapper userModelMapper, BookingRepository bookingRepository) {
         this.sportsFieldModelMapper = sportsFieldModelMapper;
         this.userModelMapper = userModelMapper;
+        this.bookingRepository = bookingRepository;
     }
 
     public BookingDTO entityToDTO(Booking booking) {

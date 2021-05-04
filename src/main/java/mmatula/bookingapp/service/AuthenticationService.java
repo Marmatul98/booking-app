@@ -36,7 +36,7 @@ public class AuthenticationService {
 
     public void register(UserDTO userDTO) {
 
-        if (userRepository.findByEmail(userDTO.getEmail()) != null) {
+        if (userRepository.findByEmail(userDTO.getEmail().toLowerCase().trim()) != null) {
             throw new IllegalArgumentException("This email already exists");
         }
 
