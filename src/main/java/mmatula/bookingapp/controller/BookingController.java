@@ -142,25 +142,14 @@ public class BookingController {
         }
     }
 
-    @PutMapping("/api/booking/{bookingId}/{userId}")
-    public void addUserToBooking(@PathVariable long bookingId, @PathVariable long userId) {
-        try {
-            this.bookingService.addUserToBooking(bookingId, userId);
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT);
-        } catch (Exception e) {
-            this.exceptionLogService.addException(e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-
-    }
-
     @PutMapping("/api/booking")
     public void requestBooking(@RequestBody BookingRequest bookingRequest) {
         try {
             this.bookingService.requestBooking(bookingRequest);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT);
+        } catch (UnsupportedOperationException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
             this.exceptionLogService.addException(e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -170,7 +159,7 @@ public class BookingController {
     @PutMapping("/admin/booking/confirm")
     public void confirmBooking(@RequestBody BookingDTO bookingDTO) {
         try {
-            this.bookingService.confirmGroupedBookings(bookingDTO);
+            this.bookingService.confirmMergedTimeBookingsRequest(bookingDTO);
         } catch (Exception e) {
             this.exceptionLogService.addException(e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -180,7 +169,7 @@ public class BookingController {
     @PutMapping("/admin/booking/remove")
     public void removeBooking(@RequestBody BookingDTO bookingDTO) {
         try {
-            this.bookingService.removeGroupedBookingsRequest(bookingDTO);
+            this.bookingService.removeMergedTimeBookingsRequest(bookingDTO);
         } catch (Exception e) {
             this.exceptionLogService.addException(e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);

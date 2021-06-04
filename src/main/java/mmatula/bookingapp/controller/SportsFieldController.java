@@ -60,4 +60,9 @@ public class SportsFieldController {
         }
     }
 
+    @PutMapping("/api/sportsFieldGroup/{sportsFieldId}/{groupId}")
+    public void addSportsFieldToGroup(@PathVariable int sportsFieldId, @PathVariable int groupId) {
+        this.sportsFieldService.addSportsFieldToGroup(sportsFieldId, groupId);
+    }
+
 }

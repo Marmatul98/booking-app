@@ -16,6 +16,8 @@ public class BookingDTO {
     private String startTime;
     private String endTime;
 
+    private boolean available;
+
     private UserDTO user;
 
     private SportsFieldDTO sportsField;

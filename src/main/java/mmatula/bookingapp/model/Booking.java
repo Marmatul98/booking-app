@@ -24,9 +24,11 @@ public class Booking {
     @ManyToOne(fetch = FetchType.EAGER)
     private User user;
 
-    private boolean requested = false;
+    private boolean available = true;
 
-    private Boolean confirmed = false;
+    private boolean requested;
+
+    private boolean confirmed;
 
     private LocalTime bookedFrom;
 

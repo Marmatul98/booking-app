@@ -20,8 +20,18 @@ public class SportsField {
 
     private String name;
 
+    private boolean isGroup;
+
+    private boolean isInGroup;
+
     @OneToMany(mappedBy = "sportsField", fetch = FetchType.EAGER)
     private Set<Booking> bookings = new HashSet<>();
+
+    @OneToMany(mappedBy = "sportsFieldGroup", fetch = FetchType.EAGER)
+    private Set<SportsField> groupedSportsFields = new HashSet<>();
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    private SportsField sportsFieldGroup;
 
     public SportsField(String name) {
         this.name = name;

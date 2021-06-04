@@ -43,4 +43,13 @@ public class SportsFieldService {
         }
         this.sportsFieldRepository.deleteById(id);
     }
+
+    public void addSportsFieldToGroup(int sportsFieldId, int groupId) {
+        SportsField sportsField = this.sportsFieldRepository.findById(sportsFieldId).orElseThrow();
+        SportsField group = this.sportsFieldRepository.findById(groupId).orElseThrow();
+        group.getGroupedSportsFields().add(sportsField);
+        sportsField.setSportsFieldGroup(group);
+        sportsFieldRepository.save(sportsField);
+        sportsFieldRepository.save(group);
+    }
 }

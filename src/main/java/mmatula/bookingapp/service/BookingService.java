@@ -75,36 +75,29 @@ public class BookingService {
         } else throw new NoSuchElementException();
     }
 
-    public void addUserToBooking(long bookingId, long userId) {
-        var booking = bookingRepository.findById(bookingId).orElseThrow();
-        if (booking.getUser() == null) {
-            booking.setUser(this.userRepository.findById(userId).orElseThrow());
-            this.bookingRepository.save(booking);
-        } else throw new IllegalArgumentException();
-    }
-
     public List<Booking> getBookingsBySportsFieldIdAndDate(int sportsFieldId, LocalDate date) {
         return this.bookingRepository.getBookingsBySportsFieldIdAndDateOrderById(sportsFieldId, date);
     }
 
     public void requestBooking(BookingRequest bookingRequest) {
-        var user = userService.getUserByEmail(bookingRequest.getUser().getEmail());
-        userService.updateUser(bookingRequest.getUser());
+        if (checkSportsFieldGroups(bookingRequest)) {
+            var user = userService.getUserByEmail(bookingRequest.getUser().getEmail());
+            userService.updateUser(bookingRequest.getUser());
 
-        bookingRequest.getBookings()
-                .forEach(bookingDTO -> {
-                    var booking = this.bookingRepository.findById(bookingDTO.getBookingId()).orElseThrow();
-                    if (!booking.getConfirmed() && !booking.isRequested() && booking.getUser() == null) {
-                        booking.setUser(user);
-                        booking.setRequested(true);
-                        booking.setConfirmed(false);
-                        this.userRepository.save(user);
-                        this.bookingRepository.save(booking);
-                    } else throw new IllegalArgumentException("Booking is occupied");
-                });
+            bookingRequest.getBookings()
+                    .forEach(bookingDTO -> {
+                        var booking = this.bookingRepository.findById(bookingDTO.getBookingId()).orElseThrow();
+                        if (isBookingAvailable(booking)) {
+                            if (booking.getSportsField().isInGroup()) {
+                                setBookingGroupAvailableState(booking, false);
+                            }
+                            setBookingRequestedState(booking, user);
+                        } else throw new IllegalArgumentException("Booking is occupied");
+                    });
+        } else throw new UnsupportedOperationException();
     }
 
-    public void confirmGroupedBookings(BookingDTO bookingDTO) {
+    public void confirmMergedTimeBookingsRequest(BookingDTO bookingDTO) {
         List<Booking> bookingsToConfirm = getBookingsInTimeInterval(bookingDTO);
         for (Booking booking : bookingsToConfirm) {
             booking.setConfirmed(true);
@@ -113,7 +106,7 @@ public class BookingService {
         this.emailService.sendConfirmationEmail(bookingDTO);
     }
 
-    public void removeGroupedBookingsRequest(BookingDTO bookingDTO) {
+    public void removeMergedTimeBookingsRequest(BookingDTO bookingDTO) {
         List<Booking> bookingsToRemove = getBookingsInTimeInterval(bookingDTO);
         for (Booking booking : bookingsToRemove) {
             var user = booking.getUser();
@@ -121,6 +114,11 @@ public class BookingService {
             booking.setConfirmed(false);
             booking.setRequested(false);
             booking.setUser(null);
+            booking.setAvailable(true);
+
+            if (booking.getSportsField().isInGroup()) {
+                setBookingGroupAvailableState(booking, true);
+            }
 
             this.bookingRepository.save(booking);
             this.userRepository.save(user);
@@ -138,10 +136,18 @@ public class BookingService {
 
         List<Booking> returnedList = new ArrayList<>();
 
-        for (User user : users) {
-            List<Booking> requestedUserBookings = this.bookingRepository.getBookingsByUserAndRequestedTrueAndConfirmedFalse(user);
-            returnedList.addAll(this.groupSameDayBookings(requestedUserBookings));
+        List<SportsField> sportsFields = this.sportsFieldRepository.findAll();
+
+        for (SportsField sportsField : sportsFields) {
+            for (User user : users) {
+                List<Booking> requestedUserBookings =
+                        this.bookingRepository.getBookingsByUserAndRequestedTrueAndConfirmedFalseAndSportsField(user, sportsField);
+                if (!requestedUserBookings.isEmpty()) {
+                    returnedList.addAll(this.groupSameDayBookings(requestedUserBookings));
+                }
+            }
         }
+
         return returnedList;
     }
 
@@ -175,11 +181,9 @@ public class BookingService {
         List<Booking> returnedList = new ArrayList<>();
 
         for (User user : users) {
-            List<Booking> requestedUserBookings = this.bookingRepository.getBookingsByUserAndConfirmedTrue(user);
-            returnedList.addAll(this.groupSameDayBookings(requestedUserBookings));
+            returnedList.addAll(getFutureBookingsByUserEmail(user.getEmail()));
         }
         return returnedList;
-
     }
 
     @Scheduled(cron = "@daily")
@@ -402,7 +406,98 @@ public class BookingService {
         var date = LocalDate.parse(bookingDTO.getBookedDate(), DateTimeFormatter.ISO_LOCAL_DATE);
         var startTime = LocalTime.parse(bookingDTO.getStartTime(), DateTimeFormatter.ofPattern(TIME_FORMAT));
         var endTime = LocalTime.parse(bookingDTO.getEndTime(), DateTimeFormatter.ofPattern(TIME_FORMAT));
-        return this.bookingRepository.getBookingsByUserAndDateAndBookedFromBetween(
-                user, date, startTime, endTime);
+        var sportsField = this.sportsFieldRepository.findById(Integer.parseInt(bookingDTO.getSportsField().getId())).orElseThrow();
+        return this.bookingRepository.getBookingsByUserAndDateAndBookedFromBetweenAndSportsField(
+                user, date, startTime, endTime, sportsField);
+    }
+
+    private void setBookingGroupAvailableState(Booking booking, boolean available) {
+        if (booking.getSportsField().isGroup()) {
+            for (SportsField sportsField : booking.getSportsField().getGroupedSportsFields()) {
+                var bookingInGroup =
+                        this.bookingRepository.getBookingBySportsFieldAndDateAndBookedFrom(
+                                sportsField,
+                                booking.getDate(),
+                                booking.getBookedFrom());
+                if (bookingInGroup != null) {
+                    bookingInGroup.setAvailable(available);
+                    this.bookingRepository.save(bookingInGroup);
+                }
+            }
+        } else {
+            var bookingInGroup =
+                    this.bookingRepository.getBookingBySportsFieldAndDateAndBookedFrom(
+                            booking.getSportsField().getSportsFieldGroup(),
+                            booking.getDate(),
+                            booking.getBookedFrom());
+            if (bookingInGroup != null) {
+                bookingInGroup.setAvailable(available);
+                this.bookingRepository.save(bookingInGroup);
+            }
+        }
+    }
+
+    private void setBookingRequestedState(Booking booking, User user) {
+        booking.setUser(user);
+        booking.setRequested(true);
+        booking.setConfirmed(false);
+        booking.setAvailable(false);
+        this.userRepository.save(user);
+        this.bookingRepository.save(booking);
+    }
+
+    private boolean checkSportsFieldGroups(BookingRequest bookingRequest) {
+        List<Booking> bookings = bookingRequest.getBookings()
+                .stream()
+                .map(bookingDTO -> this.bookingRepository.findById(bookingDTO.getBookingId()).orElseThrow())
+                .collect(Collectors.toList());
+
+        SportsField group = null;
+        List<Booking> bookingsFromGroup = new ArrayList<>();
+        for (Booking booking : bookings) {
+            if (booking.getSportsField().isGroup()) {
+                group = booking.getSportsField();
+                bookingsFromGroup.add(booking);
+            }
+        }
+        if (!bookingsFromGroup.isEmpty()) {
+            for (Booking booking : bookings) {
+                if (booking.getSportsField().isInGroup() &&
+                        !booking.getSportsField().isGroup() &&
+                        booking.getSportsField().getSportsFieldGroup().equals(group)) {
+                    for (Booking bookingFromGroup : bookingsFromGroup) {
+                        if (bookingFromGroup.getBookedFrom().equals(booking.getBookedFrom())) {
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    private boolean isBookingAvailable(Booking booking) {
+        if (!booking.isAvailable()) {
+            return false;
+        } else if (booking.getSportsField().isInGroup()) {
+            return isBookingAvailableInGroup(booking);
+        } else return true;
+    }
+
+    private boolean isBookingAvailableInGroup(Booking booking) {
+        Set<SportsField> groupedSportsFields;
+        if (booking.getSportsField().isGroup()) {
+            groupedSportsFields = booking.getSportsField().getGroupedSportsFields();
+        } else {
+            groupedSportsFields = booking.getSportsField().getSportsFieldGroup().getGroupedSportsFields();
+        }
+        for (SportsField sportsField : groupedSportsFields) {
+            var groupedBooking =
+                    this.bookingRepository.getBookingBySportsFieldAndDateAndBookedFrom(sportsField, booking.getDate(), booking.getBookedFrom());
+            if (groupedBooking != null) {
+                return booking.isAvailable();
+            } else return true;
+        }
+        return true;
     }
 }

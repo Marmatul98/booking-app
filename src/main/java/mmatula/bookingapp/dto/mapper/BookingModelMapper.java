@@ -3,8 +3,8 @@ package mmatula.bookingapp.dto.mapper;
 import mmatula.bookingapp.dto.BookingDTO;
 import mmatula.bookingapp.dto.UserDTO;
 import mmatula.bookingapp.model.Booking;
-import mmatula.bookingapp.model.User;
 import mmatula.bookingapp.repository.BookingRepository;
+import mmatula.bookingapp.service.BookingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -18,17 +18,19 @@ public class BookingModelMapper {
     private final SportsFieldModelMapper sportsFieldModelMapper;
     private final UserModelMapper userModelMapper;
     private final BookingRepository bookingRepository;
+    private final BookingService bookingService;
 
     @Autowired
-    public BookingModelMapper(SportsFieldModelMapper sportsFieldModelMapper, UserModelMapper userModelMapper, BookingRepository bookingRepository) {
+    public BookingModelMapper(SportsFieldModelMapper sportsFieldModelMapper, UserModelMapper userModelMapper, BookingRepository bookingRepository, BookingService bookingService) {
         this.sportsFieldModelMapper = sportsFieldModelMapper;
         this.userModelMapper = userModelMapper;
         this.bookingRepository = bookingRepository;
+        this.bookingService = bookingService;
     }
 
     public BookingDTO entityToDTO(Booking booking) {
 
-        User user = booking.getUser();
+        var user = booking.getUser();
         UserDTO userDTO = null;
 
         if (user != null) {
@@ -40,6 +42,7 @@ public class BookingModelMapper {
                 booking.getDate().format(DateTimeFormatter.ISO_LOCAL_DATE),
                 booking.getBookedFrom().format(DateTimeFormatter.ofPattern("HH:mm")),
                 booking.getBookedTo().format(DateTimeFormatter.ofPattern("HH:mm")),
+                booking.isAvailable(),
                 userDTO,
                 this.sportsFieldModelMapper.entityToDto(booking.getSportsField())
         );
